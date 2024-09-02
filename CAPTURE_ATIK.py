@@ -27,18 +27,18 @@ from PIL import Image, PngImagePlugin
 import AtikSDK
 import time
 
-# DEVICE NAME (UPDATE ACCORDINGLY)
+# DEVICE NAME (Modify accordingly)
 device_name = "MISS2"
 
-# SETTINGS (UPDATE ACCORDINGLY)
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), f".venv{device_name}/Captured_PNG/raw_PNG")  # Path to save captured images
+# SETTINGS
+raw_PNG_folder = os.path.join(os.path.expanduser("~"), f".venv{device_name}/Captured_PNG/raw_PNG")  # Path to save captured images - Update accordingly
 exposure_duration = 12  # Exposure time per image (12 SECONDS)
 optimal_temperature = 0  # Optimal temperature for camera cooling (ZERO Celsius)
 imaging_cadence = 15  # Time interval between consecutive image capture starts
 binX = 2  # Horizontal binning
 binY = 2  # Vertical binning
 
-# Camera connection and initialisation
+# Camera connection and initialization
 camera = AtikSDK.AtikSDKCamera()
 camera.connect()
 if camera.is_connected():

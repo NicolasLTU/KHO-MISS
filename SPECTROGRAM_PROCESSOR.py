@@ -30,11 +30,9 @@ miss1_wavelength_coeffs = [4217.273360, 2.565182, 0.000170]
 miss2_wavelength_coeffs = [4088.509, 2.673936, 1.376154e-4]
 
 def calculate_wavelength(pixel_columns, coeffs):
-    """Calculate the wavelength for each pixel column."""
     return coeffs[0] + coeffs[1] * pixel_columns + coeffs[2] * (pixel_columns ** 2)
 
 def calculate_k_lambda(wavelengths, coeffs):
-    """Calculate K(lambda) using the provided coefficients."""
     return np.polyval(coeffs, wavelengths)
 
 def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
@@ -57,7 +55,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     else:
         raise ValueError("Unknown spectrograph type. Please choose 'MISS1' or 'MISS2'.")
 
-    calibrated_image = rotated_image * k_lambda[np.newaxis, :]
+    calibrated_image = rotated_image * k_lambda[np.newaxis, :] / 1000  # Convert to kR/Å
     elevation_scale = np.linspace(-90, 90, fov_end - fov_start)
 
     fig = plt.figure(figsize=(12, 8))
@@ -93,7 +91,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
 
     plt.tight_layout()
     plt.show()
-
+    
 def check_and_process_latest_image(image_folder, output_folder):
     last_processed_image = None
 
@@ -137,7 +135,7 @@ def get_latest_image_path(image_folder):
     
     return None
 
-# input/output paths
+# Example usage:
 image_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
 output_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms")
 check_and_process_latest_image(image_folder, output_folder)

@@ -21,10 +21,6 @@ from PIL import Image, PngImagePlugin
 import re
 from collections import defaultdict
 
-# PATHS (UPDATE ACCORDINGLY)
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG/raw_PNG')
-PNG_base_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG')
-
 def get_device_name_from_metadata(filepath):
     '''
     Extracts the device name (MISS1, MISS2...) from the PNG metadata.
@@ -140,6 +136,9 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
 
                     # Update the list of already processed minutes
                     processed_minutes.append(minute_key)
+
+raw_PNG_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG/raw_PNG')
+PNG_base_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG')
 
 # List to keep track of processed minutes 
 processed_minutes = []

@@ -4,7 +4,7 @@ with spectral and spatial analysis and keogram based on latest available data fr
 
 1. Initialises a list to track subprocesses.
 2. Defines a function to terminate all subprocesses safely (ctrl + C)
-4. Launches multiple subprocesses (keogram maker, RGB column maker, average PNG maker, and SPECTROGRAM_PROCESSOR).
+4. Launches multiple subprocesses (keogram maker, RGB column maker, average PNG maker, kho_website_feed and spectrogram processor).
 5. Enters a loop to keep processes running, checking every 60 seconds.
 6. On interrupt, stops all subprocesses and exits.
 
@@ -102,7 +102,6 @@ def copy_latest_to_feed():
         if verify_image_integrity(spectrogram_path):
             shutil.copy(spectrogram_path, feed_dir)
             last_copied_spectrogram = latest_spectrogram
-            print(f"Copied spectrogram: {latest_spectrogram} to Feed directory.")
     
     # Retrieve the latest keogram
     latest_keogram = get_latest_file(keogram_dir)
@@ -111,7 +110,6 @@ def copy_latest_to_feed():
         if verify_image_integrity(keogram_path):
             shutil.copy(keogram_path, feed_dir)
             last_copied_keogram = latest_keogram
-            print(f"Copied keogram: {latest_keogram} to Feed directory.")
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
@@ -129,19 +127,17 @@ if __name__ == "__main__":
                 processes = []
 
                 # Start new processes
-                processes.append(start_subprocess("KEOGRAM_MAKER.py"))
-                processes.append(start_subprocess("RGB_COLUMN_MAKER.py"))
-                processes.append(start_subprocess("AVERAGE_PNG_MAKER.py"))
-                processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.py"))
+                processes.append(start_subprocess("TEST_KEO_ANALYTICS.PY"))
+                processes.append(start_subprocess("RGB_COLUMN_MAKER.PY"))
+                processes.append(start_subprocess("AVERAGE_PNG_MAKER.PY"))
+                processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.PY"))
+                processes.append(start_subprocess("KHO_WEBSITE_DATE-FEED.PY"))
 
                 # Confirm that all processes were started
                 if verify_processes(processes):
                     print("All subprocesses started successfully.")
                 else:
                     print("One or more subprocesses failed to start.")
-
-                # Copy the latest spectrogram and keogram to the Feed directory
-                copy_latest_to_feed()
 
             time.sleep(1)
 

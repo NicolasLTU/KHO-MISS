@@ -13,7 +13,7 @@ from PIL import Image, PngImagePlugin
 from datetime import datetime, timezone, timedelta
 import time
 
-# DIRECTORY PATHS (Update accordingly)
+# PATHS TO INPUT AND OUTPUT
 home_dir = os.path.expanduser("~")
 spectro_path = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
 output_folder_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
