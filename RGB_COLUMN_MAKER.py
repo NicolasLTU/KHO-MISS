@@ -170,6 +170,6 @@ while True:
     
     # Calculate the time to wait until the start of the next minute
     elapsed_time = time.time() - start_time
-    sleep_time = 60 - elapsed_time  # Sleep for the remainder of the minute
+    sleep_time = 60 - elapsed_time  
     if sleep_time > 0:
         time.sleep(sleep_time)
