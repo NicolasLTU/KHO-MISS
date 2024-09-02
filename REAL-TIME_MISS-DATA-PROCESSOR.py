@@ -23,7 +23,7 @@ processes = []  # List to keep track of all subprocesses
 running = True  # Manage the while loop
 
 def stop_processes(processes, timeout=5):
-    """Stop all subprocesses gracefully."""
+    """Stop all subprocesses."""
     for process in processes:
         process.terminate()
         try:
@@ -73,8 +73,8 @@ if __name__ == "__main__":
 
                 # Start new processes
                 processes.append(start_subprocess("TEST_KEO_ANALYTICS.py"))
-                processes.append(start_subprocess("RGB_column_maker.py"))
-                processes.append(start_subprocess("average_PNG_maker.py"))
+                processes.append(start_subprocess("RGB_COLUMN_MAKER.py"))
+                processes.append(start_subprocess("AVERAGE_PNG_MAKER.py"))
                 processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.py"))
 
                 # Confirm that all processes were started
