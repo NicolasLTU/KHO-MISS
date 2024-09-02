@@ -74,7 +74,7 @@ if __name__ == "__main__":
                     if ser:
                         SunShield_OPEN(ser)  # Open the SunShield
                     if not image_capture_process or not check_atik_process():  # Only start the process if it's not running or has failed
-                        script_path = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "MISS_SOFTWARE-PACKAGE", "capture_Atik.py")
+                        script_path = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "MISS_SOFTWARE-PACKAGE", "CAPTURE_ATIK.py")
                         try:
                             image_capture_process = subprocess.Popen(["python", script_path])
                             print("Atik camera process started.")
