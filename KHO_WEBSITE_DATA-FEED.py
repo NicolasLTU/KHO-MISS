@@ -64,7 +64,7 @@ def main():
 
         # Calculate processing time and determine sleep time
         elapsed_time = time.time() - start_time
-        sleep_time = max(30 - elapsed_time, 0)  # Sleep for 60 seconds minus processing time
+        sleep_time = max(30 - elapsed_time, 0)  # Sleep for 30 seconds minus processing time
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
