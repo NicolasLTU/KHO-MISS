@@ -129,10 +129,10 @@ if __name__ == "__main__":
                 processes = []
 
                 # Start new processes
-                processes.append(start_subprocess("KEOGRAM_MAKER.PY"))
-                processes.append(start_subprocess("RGB_COLUMN_MAKER.PY"))
-                processes.append(start_subprocess("AVERAGE_PNG_MAKER.PY"))
-                processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.PY"))
+                processes.append(start_subprocess("KEOGRAM_MAKER.py"))
+                processes.append(start_subprocess("RGB_COLUMN_MAKER.py"))
+                processes.append(start_subprocess("AVERAGE_PNG_MAKER.py"))
+                processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.py"))
 
                 # Confirm that all processes were started
                 if verify_processes(processes):
