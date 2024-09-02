@@ -1,12 +1,14 @@
 '''
-This script checks for the latest averaged PNG file every minute, processes it by applying filtering, background subtraction, and rotation, and then saves the resulting spectrogram image with the format: MISS?-spectrogram-YYYYMMDD-HHMMSS.png.
+This script checks for the latest averaged PNG file every minute, processes it by applying filtering, background subtraction, and rotation, 
+and then saves the resulting spectrogram image with the format: MISS?-spectrogram-YYYYMMDD-HHMMSS.png.
 
 
 Author: Nicolas Martinez (UNIS/LTU)
 Last Update: 2024
 
 Description:
-The script checks for the latest averaged PNG file every minute, processes it by applying filtering, background subtraction, and rotation, and then saves the resulting spectrogram image with the format: MISS?-spectrogram-YYYYMMDD-HHMMSS.png.
+The script checks for the latest averaged PNG file every minute, processes it by applying filtering, background subtraction,
+and rotation, and then saves the resulting spectrogram image with the format: MISS?-spectrogram-YYYYMMDD-HHMMSS.png.
 
 '''
 
@@ -21,10 +23,10 @@ from datetime import datetime, timezone
 from scipy.ndimage import rotate
 import time
 
-# Define the base path where the averaged PNG date directory is located
+# Base path where the averaged PNG date directory is located (UPDATE ACCORDINGLY)
 image_folder = os.path.join(os.path.expanduser('~'), '.venvMISS2', 'MISS2', 'Captured_PNG', 'averaged_MISS2_PNG')
 
-# Define the output path for processed spectrograms
+# Output path for processed spectrograms + subplots (UPDATE ACCORDINGLY)
 output_folder = os.path.join(os.path.expanduser('~'), '.venvMISS2', 'MISS2', 'Processed_Spectrograms')
 
 # Function to read PNG file
@@ -41,8 +43,8 @@ def process_image(raw_image):
     processed_image = rotate(processed_image, 90, reshape=True)  # Rotate 90 degrees clockwise
     return processed_image
 
-# Normalize the light intensity
-def normalize(data):
+# Normalise the light intensity
+def normalise(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 # Retrieve the path to the latest averaged image
@@ -84,16 +86,16 @@ def process_and_save_latest_image(latest_image_file):
     ax_spectral = fig.add_subplot(gs[0, 0])
     wavelengths = np.linspace(start_wavelength, end_wavelength, len(processed_image[0]))
     spectral_data = np.mean(processed_image, axis=0)
-    normalized_spectral_data = normalize(spectral_data)
-    ax_spectral.plot(wavelengths, normalized_spectral_data)
+    normalised_spectral_data = normalise(spectral_data)
+    ax_spectral.plot(wavelengths, normalised_spectral_data)
     ax_spectral.set_yticks(np.linspace(0, 1, 3))
     ax_spectral.grid()
     ax_spectral.set_title("Spectral Analysis")       
 
     ax_spatial = fig.add_subplot(gs[1, 1])
     spatial_data = np.mean(processed_image, axis=1)
-    normalized_spatial_data = normalize(spatial_data)
-    ax_spatial.plot(normalized_spatial_data, range(processed_image.shape[0]))
+    normalised_spatial_data = normalise(spatial_data)
+    ax_spatial.plot(normalised_spatial_data, range(processed_image.shape[0]))
     ax_spatial.set_xticks(np.linspace(0, 1, 3))
     ax_spatial.set_title("Spatial Analysis")
     ax_spatial.invert_yaxis()
