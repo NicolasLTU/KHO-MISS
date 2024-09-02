@@ -183,7 +183,7 @@ def save_keogram_with_subplots(keogram, output_dir, spectrograph):
     ax_main.set_ylabel("Elevation angle [degrees]")
 
     # Set x-axis for hours (entire day)
-    x_ticks = np.arange(0, num_minutes + 1, 60)  # Positions for time labels at each hour
+    x_ticks = np.arange(0, num_minutes + 1, 120)  # Positions for time labels every second hour (120min)
     x_labels = [(datetime(2024, 1, 1) + timedelta(minutes=int(t))).strftime('%H:%M') for t in x_ticks]
     ax_main.set_xticks(x_ticks)
     ax_main.set_xticklabels(x_labels)
@@ -209,7 +209,7 @@ def save_keogram_with_subplots(keogram, output_dir, spectrograph):
     ax_temporal.plot(np.arange(temporal_avg.shape[0]), temporal_avg[:, 0], label="4278 Å", color='b')
     ax_temporal.plot(np.arange(temporal_avg.shape[0]), temporal_avg[:, 1], label="5577 Å", color='g')
     ax_temporal.plot(np.arange(temporal_avg.shape[0]), temporal_avg[:, 2], label="6300 Å", color='r')
-    ax_temporal.set_xlabel("Time (UT)")
+    #ax_temporal.set_xlabel("Time (UT)")
     ax_temporal.set_ylabel("Radiance [kR]")
     ax_temporal.legend()
 
@@ -243,9 +243,13 @@ def save_keogram_with_subplots(keogram, output_dir, spectrograph):
     ax_spatial.plot(spatial_avg[:, 1], np.linspace(90, -90, num_pixels_y), label="5577 Å", color='g')
     ax_spatial.plot(spatial_avg[:, 2], np.linspace(90, -90, num_pixels_y), label="6300 Å", color='r')
     ax_spatial.set_xlabel("Radiance [kR]")
-    ax_spatial.set_ylabel("Elevation angle [degrees]")
+    #ax_spatial.set_ylabel("Elevation angle [degrees]")
     ax_spatial.set_ylim(-90, 90)
-    ax_spatial.set_yticks(np.linspace(-90, 90, 7))
+    # Set Y-Ticks Exactly Every 15 Degrees from -90 to 90
+    ax_spatial.set_yticks(np.arange(-90, 91, 15))  # -90, -75, -60, ..., 75, 90
+
+    # Set Y-Tick Labels with Degree Symbol
+    ax_spatial.set_yticklabels([f"{int(angle)}°" for angle in np.arange(-90, 91, 15)])
     ax_spatial.legend()
 
     # Automatically adjust x-axis limits based on data for spatial subplot
