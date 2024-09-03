@@ -29,7 +29,7 @@ home_dir = os.path.expanduser("~")
 rgb_dir_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
 output_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Keograms")
 
-# Define auroral emission line wavelengths in Ångström (thousands of Å)
+# Define auroral emission line wavelengths in Ångström
 emission_wavelengths = {
     'blue': 4278,  # Blue auroral emission line
     'green': 5577, # Green auroral emission line
