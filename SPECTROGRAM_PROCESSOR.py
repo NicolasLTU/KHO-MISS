@@ -20,14 +20,10 @@ import os
 import time
 from datetime import datetime, timezone
 import re
-
-# Polynomial coefficients for MISS1 and MISS2 K(lambda) (2024)
-coeffs_sensitivity_miss1 = [1.678e-17, -3.126e-13, 1.743e-09, 2.366e-07, -2.935e-02, 6.663e+01]  
-coeffs_sensitivity_miss2 = [-1.378573e-16, 4.088257e-12, -4.806258e-08, 2.802435e-04, -8.109943e-01, 9.329611e+02]
-
-# Wavelength calibration coefficients (2024)
-miss1_wavelength_coeffs = [4217.273360, 2.565182, 0.000170]
-miss2_wavelength_coeffs = [4088.509, 2.673936, 1.376154e-4]
+from parameters import (AVERAGED_SPECTRO_PATH, PROCESSED_SPECTROGRAM_PATH,
+                        MISS1_WAVELENGTH_COEFFS, MISS2_WAVELENGTH_COEFFS,
+                        COEFFS_SENSITIVITY_MISS1, COEFFS_SENSITIVITY_MISS2,
+                        MISS1_HORIZON_LIMITS, MISS2_HORIZON_LIMITS)
 
 def calculate_wavelength(pixel_columns, coeffs):
     return coeffs[0] + coeffs[1] * pixel_columns + coeffs[2] * (pixel_columns ** 2)
@@ -45,13 +41,13 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     rotated_image = rotate(background_subtracted_image, angle=90, reshape=True)
 
     if spectrograph_type == "MISS1":
-        wavelengths = calculate_wavelength(np.arange(rotated_image.shape[1]), miss1_wavelength_coeffs)
-        k_lambda = calculate_k_lambda(wavelengths, coeffs_sensitivity_miss1)
-        fov_start, fov_end = 280, 1140
+        wavelengths = calculate_wavelength(np.arange(rotated_image.shape[1]), MISS1_WAVELENGTH_COEFFS)
+        k_lambda = calculate_k_lambda(wavelengths, COEFFS_SENSITIVITY_MISS1)
+        fov_start, fov_end = MISS1_HORIZON_LIMITS
     elif spectrograph_type == "MISS2":
-        wavelengths = calculate_wavelength(np.arange(rotated_image.shape[1]), miss2_wavelength_coeffs)
-        k_lambda = calculate_k_lambda(wavelengths, coeffs_sensitivity_miss2)
-        fov_start, fov_end = 271, 1116
+        wavelengths = calculate_wavelength(np.arange(rotated_image.shape[1]), MISS2_WAVELENGTH_COEFFS)
+        k_lambda = calculate_k_lambda(wavelengths, COEFFS_SENSITIVITY_MISS2)
+        fov_start, fov_end = MISS2_HORIZON_LIMITS
     else:
         raise ValueError("Unknown spectrograph type. Please choose 'MISS1' or 'MISS2'.")
 
@@ -136,6 +132,6 @@ def get_latest_image_path(image_folder):
     return None
 
 # Example usage:
-image_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
-output_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms")
+image_folder = AVERAGED_SPECTRO_PATH
+output_folder = PROCESSED_SPECTROGRAM_PATH
 check_and_process_latest_image(image_folder, output_folder)
