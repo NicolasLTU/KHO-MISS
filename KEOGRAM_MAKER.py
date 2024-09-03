@@ -61,38 +61,36 @@ def initialise_keogram():
     return np.full((num_pixels_y, num_minutes, 3), 255, dtype=np.uint8)
 
 # Load an existing keogram or create a new one if none exists
-def load_existing_keogram(output_dir, spectrograph):
+def load_existing_keogram(config, spectrograph):
     current_utc_time = datetime.now(timezone.utc)
     current_date = current_utc_time.strftime('%Y/%m/%d')
 
-    keogram_path = os.path.join(output_dir, current_date, f'{spectrograph}-keogram-{current_utc_time.strftime("%Y%m%d")}.png')
+    keogram_path = os.path.join(config['keogram_dir'], current_date, f'{spectrograph}-keogram-{current_utc_time.strftime("%Y%m%d")}.png')
 
     if os.path.exists(keogram_path):
         with Image.open(keogram_path) as img:
             keogram = np.array(img)
 
         # Validate the loaded keogram dimensions
-        if keogram.shape != (num_pixels_y, num_minutes, 3):
-            keogram = initialise_keogram()  # Reinitialise to correct dimensions
+        if keogram.shape != (300, 1440, 3):  # Assuming these are the correct dimensions
+            keogram = np.full((300, 1440, 3), 255, dtype=np.uint8)  # Initialise to correct dimensions with white
             last_processed_minute = 0
         else:
             last_processed_minute = np.max(np.where(np.any(keogram != 255, axis=0))[0])
 
         return keogram, last_processed_minute
     else:
-        return initialise_keogram(), 0
+        return np.full((300, 1440, 3), 255, dtype=np.uint8), 0
 
 # Save the updated keogram
-def save_keogram(keogram, output_dir, spectrograph):
+def save_keogram(keogram, config, spectrograph):
     current_utc_time = datetime.now(timezone.utc)
     current_date_str = current_utc_time.strftime('%Y%m%d')
-    current_date_dir = os.path.join(output_dir, current_utc_time.strftime('%Y/%m/%d'))
+    current_date_dir = os.path.join(config['keogram_dir'], current_utc_time.strftime('%Y/%m/%d'))
     os.makedirs(current_date_dir, exist_ok=True)
 
-    # Ensure that only the core keogram data (300x1440x3) is saved
-    keogram_to_save = keogram[:, :num_minutes, :]
     keogram_filename = os.path.join(current_date_dir, f'{spectrograph}-keogram-{current_date_str}.png')
-    Image.fromarray(keogram_to_save).save(keogram_filename)
+    Image.fromarray(keogram).save(keogram_filename)
 
 # Apply sensitivity correction to radiance using the respective coefficients
 def apply_sensitivity_correction(radiance, wavelength, coeffs):
