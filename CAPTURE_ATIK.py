@@ -35,8 +35,8 @@ raw_PNG_folder = os.path.join(os.path.expanduser("~"), f".venv{device_name}/Capt
 exposure_duration = 12  # Exposure time per image (12 SECONDS)
 optimal_temperature = 0  # Optimal temperature for camera cooling (ZERO Celsius)
 imaging_cadence = 15  # Time interval between consecutive image capture starts
-binX = 2  # Horizontal binning
-binY = 2  # Vertical binning
+binX = 1  # Horizontal binning
+binY = 1  # Vertical binning
 
 # Camera connection and initialisation
 camera = AtikSDK.AtikSDKCamera()
