@@ -14,6 +14,7 @@ averaged_PNG_folder = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PN
 rgb_dir_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
 output_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Keograms")
 
+# Spectrogram's binning binX = binY
 binX = 1  # ADJUST ACCORDINGLY!
 
 # Horizon limits for MISS1 and MISS2, adjusted for binning
