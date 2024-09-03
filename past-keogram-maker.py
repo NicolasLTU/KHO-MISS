@@ -272,7 +272,7 @@ def save_keogram(keogram, output_dir, date_str, spectrograph):
     plt.close(fig)
     print(f"Keogram saved as: {keogram_filename}")
 
-# Main function to simulate the entire process
+# Main function for the entire process
 def main():
     date_input = input("Enter the date to process (yyyy/mm/dd): ")
     spectrograph = input("Enter the spectrograph name (MISS1 or MISS2): ")
