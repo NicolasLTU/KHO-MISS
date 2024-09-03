@@ -14,12 +14,11 @@ averaged_PNG_folder = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PN
 rgb_dir_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
 output_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Keograms")
 
-# Modify binning factor here
-binning_factor = 1  # Adjust this factor as needed (e.g., 2 for 2x binning)
+binX = 1  # ADJUST ACCORDINGLY!
 
 # Horizon limits for MISS1 and MISS2, adjusted for binning
-miss1_horizon_limits = (280 // binning_factor, 1140 // binning_factor)
-miss2_horizon_limits = (271 // binning_factor, 1116 // binning_factor)
+miss1_horizon_limits = (280 // binX, 1140 // binX)
+miss2_horizon_limits = (271 // binX, 1116 // binX)
 
 processed_images = set()
 
@@ -105,8 +104,8 @@ def average_images(PNG_base_folder, raw_PNG_folder, processed_minutes, device_na
     print("Averaging of images completed.")
 
 # Process and average emission line rows
-def process_emission_line(spectro_array, emission_row, binning_factor, pixel_range):
-    num_rows_to_average = max(1, int(12 / binning_factor))
+def process_emission_line(spectro_array, emission_row, binX, pixel_range):
+    num_rows_to_average = max(1, int(12 / binX))
     start_row = max(emission_row - num_rows_to_average // 2, 0)
     end_row = min(emission_row + num_rows_to_average // 2, spectro_array.shape[0])
 
@@ -117,11 +116,11 @@ def process_emission_line(spectro_array, emission_row, binning_factor, pixel_ran
     return averaged_row.flatten()
 
 # Create the RGB image from the extracted rows
-def create_rgb_column(spectro_array, row_630, row_558, row_428, binning_factor, pixel_range):
+def create_rgb_column(spectro_array, row_630, row_558, row_428, binX, pixel_range):
     # Process each emission line and extract the corresponding rows
-    column_RED = process_emission_line(spectro_array, row_630, binning_factor, pixel_range)
-    column_GREEN = process_emission_line(spectro_array, row_558, binning_factor, pixel_range)
-    column_BLUE = process_emission_line(spectro_array, row_428, binning_factor, pixel_range)
+    column_RED = process_emission_line(spectro_array, row_630, binX, pixel_range)
+    column_GREEN = process_emission_line(spectro_array, row_558, binX, pixel_range)
+    column_BLUE = process_emission_line(spectro_array, row_428, binX, pixel_range)
 
     # Stack the columns together to form an RGB image
     true_rgb_image = np.stack((column_RED, column_GREEN, column_BLUE), axis=-1)
@@ -165,7 +164,7 @@ def create_rgb_columns_for_day(date_str, spectrograph):
             print(f"Unknown spectrograph type for {filename}")
             continue
 
-        RGB_image = create_rgb_column(spectro_data, 724, 723, 140, binning_factor, pixel_range)
+        RGB_image = create_rgb_column(spectro_data, 724, 723, 140, binX, pixel_range)
         
         # Check the shape before creating the image
         print(f"Processing {filename} - RGB_image shape: {RGB_image.shape}")
