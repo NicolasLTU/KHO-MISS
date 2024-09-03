@@ -1,5 +1,4 @@
 '''
-
 This script is designed to control the MISS spectrograph's Atik414EX camera, capture 4 images per minute (12 SECONDS exposure), 
 and save them as PNG files with 16-bit unsigned integer scaling along with relevant metadata. 
 The images are saved in a directory structure based on the current date (YYYY/MM/DD). The script also supports configuring various camera settings, 
@@ -31,7 +30,7 @@ import time
 device_name = "MISS2"
 
 # SETTINGS
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), f".venv{device_name}/Captured_PNG/raw_PNG")  # Path to save captured images - Update accordingly
+raw_PNG_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "RAW_PNG")  # Unified path for saving captured images
 exposure_duration = 12  # Exposure time per image (12 SECONDS)
 optimal_temperature = 0  # Optimal temperature for camera cooling (ZERO Celsius)
 imaging_cadence = 15  # Time interval between consecutive image capture starts
@@ -50,12 +49,6 @@ else:
 camera.set_exposure_speed(exposure_duration)  # Set exposure time
 camera.set_binning(binX, binY)  # Set binning
 camera.set_cooling(optimal_temperature)  # Set cooling temperature
-
-# Gain control (optional)
-# camera.set_gain_offset(100)
-
-# Dark mode for dark frame subtraction (optional)
-# camera.set_dark_mode(enable=True)
 
 def capture_and_save_images(base_folder, camera):
     '''
@@ -82,9 +75,6 @@ def capture_and_save_images(base_folder, camera):
             # Capture an image with the specified exposure time
             image_array = camera.take_image(exposure_duration)
             uint16_array = image_array.astype(np.uint16)
-
-            # Flip the image vertically if it is saved upside down
-            #uint16_array = np.flipud(uint16_array)
 
             # Retrieve the current temperature
             try:
@@ -126,6 +116,7 @@ except Exception as e:
     print(f"An error occurred: {e}")
 finally:
     camera.disconnect()
+
 
 '''
 AtikSDK Reference Commands
