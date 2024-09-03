@@ -38,7 +38,7 @@ imaging_cadence = 15  # Time interval between consecutive image capture starts
 binX = 2  # Horizontal binning
 binY = 2  # Vertical binning
 
-# Camera connection and initialization
+# Camera connection and initialisation
 camera = AtikSDK.AtikSDKCamera()
 camera.connect()
 if camera.is_connected():
