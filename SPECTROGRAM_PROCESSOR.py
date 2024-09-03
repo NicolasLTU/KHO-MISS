@@ -92,12 +92,12 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     plt.tight_layout()
     plt.show()
     
-def check_and_process_latest_image(image_folder, output_folder):
+def check_and_process_latest_image(config):
     last_processed_image = None
 
     while True:
         start_time = time.time()
-        latest_image_file = get_latest_image_path(image_folder)
+        latest_image_file = get_latest_image_path(config['spectro_path'])
         if latest_image_file and latest_image_file != last_processed_image:
             image_array = np.array(Image.open(latest_image_file))
 
@@ -110,7 +110,7 @@ def check_and_process_latest_image(image_folder, output_folder):
 
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M00")
             processed_image_name = f"{spectrograph_type}-spectrogram-{timestamp}.png"
-            processed_image_path = os.path.join(output_folder, processed_image_name)
+            processed_image_path = os.path.join(config['processed_spectrogram_dir'], processed_image_name)
             plt.savefig(processed_image_path, format='png', bbox_inches='tight')
             plt.close(fig)
 
@@ -135,7 +135,10 @@ def get_latest_image_path(image_folder):
     
     return None
 
-# Example usage:
-image_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
-output_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms")
-check_and_process_latest_image(image_folder, output_folder)
+check_and_process_latest_image(config)
+
+
+# Paths - For standalone use only
+#image_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
+#output_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms")
+
