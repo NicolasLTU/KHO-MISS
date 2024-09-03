@@ -201,7 +201,7 @@ move_internal_filterwheel
 internal_filterwheel_info
 
 Other Features:
-initialise_lens
+initialize_lens
 set_lens_aperture
 get_lens_aperture
 set_lens_focus
