@@ -20,6 +20,7 @@ import numpy as np
 from PIL import Image, PngImagePlugin
 import re
 from collections import defaultdict
+from parameters import parameters  # Import the parameters dictionary
 
 def get_device_name_from_metadata(filepath):
     '''
@@ -45,7 +46,6 @@ def get_device_name_from_metadata(filepath):
         return None
 
 def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minutes):
-
     images_by_minute = defaultdict(list)
     filename_regex = re.compile(r'^.+-(\d{8})-(\d{6})\.png$')  # Regex to match filenames
 
@@ -74,7 +74,6 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
             target_utc = datetime.datetime(year, month, day, hour, minute, tzinfo=datetime.timezone.utc)
 
             if target_utc < current_time_utc - datetime.timedelta(seconds=15):
-
                 sum_img_array = None
                 count = 0
                 device_name = None
@@ -137,8 +136,9 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
                     # Update the list of already processed minutes
                     processed_minutes.append(minute_key)
 
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG/raw_PNG')
-PNG_base_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG')
+# Use the parameters dictionary to get paths
+raw_PNG_folder = parameters['raw_png_dir']
+PNG_base_folder = parameters['image_folder']
 
 # List to keep track of processed minutes 
 processed_minutes = []
