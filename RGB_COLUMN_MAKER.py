@@ -13,11 +13,6 @@ from PIL import Image, PngImagePlugin
 from datetime import datetime, timezone, timedelta
 import time
 
-# PATHS TO INPUT AND OUTPUT
-home_dir = os.path.expanduser("~")
-spectro_path = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
-output_folder_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
-
 # Wavelength calibration coefficients
 miss1_wavelength_coeffs = [4217.273360, 2.565182, 0.000170]
 miss2_wavelength_coeffs = [4088.509, 2.673936, 1.376154e-4]
@@ -105,20 +100,20 @@ def create_rgb_column(spectro_array, row_630, row_558, row_428, binning_factor, 
     return true_rgb_image
 
 # Process images to create RGB columns
-def create_rgb_columns():
+def create_rgb_columns(config):  # Config passed in from the main script
     global processed_images
 
     current_time_UT = datetime.now(timezone.utc)
     current_day = current_time_UT.day 
 
-    spectro_path_dir = os.path.join(spectro_path, current_time_UT.strftime("%Y/%m/%d"))
+    spectro_path_dir = os.path.join(config['spectro_path'], current_time_UT.strftime("%Y/%m/%d"))
 
     if current_time_UT.day != current_day:
         processed_images.clear()
         current_day = current_time_UT.day
 
     ensure_directory_exists(spectro_path_dir)
-    output_folder = os.path.join(output_folder_base, current_time_UT.strftime("%Y/%m/%d"))
+    output_folder = os.path.join(config['output_folder_base'], current_time_UT.strftime("%Y/%m/%d"))
     ensure_directory_exists(output_folder)
 
     matching_files = [f for f in os.listdir(spectro_path_dir) if f.endswith(".png")]
@@ -166,10 +161,16 @@ def create_rgb_columns():
 while True:
     start_time = time.time()  # Record the start time of the loop
     
-    create_rgb_columns()
+    create_rgb_columns(config)  # Ensure the config is passed here
     
     # Calculate the time to wait until the start of the next minute
     elapsed_time = time.time() - start_time
     sleep_time = 60 - elapsed_time  
     if sleep_time > 0:
         time.sleep(sleep_time)
+
+# PATHS TO INPUT AND OUTPUT - for standalone use/test only
+#home_dir = os.path.expanduser("~")
+#spectro_path = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
+#output_folder_base = os.path.join(home_dir, ".venv
+
