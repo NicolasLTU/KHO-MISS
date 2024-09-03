@@ -44,7 +44,10 @@ def get_device_name_from_metadata(filepath):
         print(f"Error reading metadata from {os.path.basename(filepath)}: {e}")
         return None
 
-def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minutes):
+def average_images(config, current_time, processed_minutes):
+
+    raw_PNG_folder = config['raw_png_dir']
+    PNG_base_folder = config['averaged_png_dir']
 
     images_by_minute = defaultdict(list)
     filename_regex = re.compile(r'^.+-(\d{8})-(\d{6})\.png$')  # Regex to match filenames
@@ -137,16 +140,13 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
                     # Update the list of already processed minutes
                     processed_minutes.append(minute_key)
 
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG/raw_PNG')
-PNG_base_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG')
-
-# List to keep track of processed minutes 
-processed_minutes = []
-
-while True:
-    try:
-        current_time = datetime.datetime.now(datetime.timezone.utc)
-        average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minutes)
-        time.sleep(30 - (current_time.second % 30))  # Sleep until 30 seconds past the minute
-    except Exception as e:
-        print(f"An error occurred: {e}")
+# Main entry point of the script
+if __name__ == "__main__":
+    processed_minutes = []
+    while True:
+        try:
+            current_time = datetime.datetime.now(datetime.timezone.utc)
+            average_images(config, current_time, processed_minutes)  # Pass the config dictionary to the function
+            time.sleep(30 - (current_time.second % 30))  # Sleep until 30 seconds past the minute
+        except Exception as e:
+            print(f"An error occurred: {e}")
