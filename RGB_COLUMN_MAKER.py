@@ -105,20 +105,20 @@ def create_rgb_column(spectro_array, row_630, row_558, row_428, binning_factor, 
     return true_rgb_image
 
 # Process images to create RGB columns
-def create_rgb_columns():
+def create_rgb_columns(config):
     global processed_images
 
     current_time_UT = datetime.now(timezone.utc)
     current_day = current_time_UT.day 
 
-    spectro_path_dir = os.path.join(spectro_path, current_time_UT.strftime("%Y/%m/%d"))
+    spectro_path_dir = os.path.join(config['spectro_path'], current_time_UT.strftime("%Y/%m/%d"))
 
     if current_time_UT.day != current_day:
         processed_images.clear()
         current_day = current_time_UT.day
 
     ensure_directory_exists(spectro_path_dir)
-    output_folder = os.path.join(output_folder_base, current_time_UT.strftime("%Y/%m/%d"))
+    output_folder = os.path.join(config['output_folder_base'], current_time_UT.strftime("%Y/%m/%d"))
     ensure_directory_exists(output_folder)
 
     matching_files = [f for f in os.listdir(spectro_path_dir) if f.endswith(".png")]
