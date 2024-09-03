@@ -9,26 +9,12 @@ Nicolas Martinez (UNIS/LTU) 2024
 import os
 import numpy as np
 from scipy import signal
-from PIL import Image, PngImagePlugin
-from datetime import datetime, timezone, timedelta
+from PIL import Image
+from datetime import datetime, timezone
 import time
-
-# PATHS TO INPUT AND OUTPUT
-home_dir = os.path.expanduser("~")
-spectro_path = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
-output_folder_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
-
-# Wavelength calibration coefficients
-miss1_wavelength_coeffs = [4217.273360, 2.565182, 0.000170]
-miss2_wavelength_coeffs = [4088.509, 2.673936, 1.376154e-4]
-
-# Polynomial coefficients for MISS1 and MISS2 K(lambda)
-coeffs_sensitivity_miss1 = [6.649e+01, -2.922e-02, 1.889e-07, 1.752e-09, -3.134e-13, 1.681e-17]
-coeffs_sensitivity_miss2 = [-1.378573e-16, 4.088257e-12, -4.806258e-08, 2.802435e-04, -8.109943e-01, 9.329611e+02]
-
-# Horizon limits for MISS1 and MISS2
-miss1_horizon_limits = (280, 1140)
-miss2_horizon_limits = (271, 1116)
+from parameters import (SPECTRO_PATH, OUTPUT_FOLDER_BASE, MISS1_WAVELENGTH_COEFFS, MISS2_WAVELENGTH_COEFFS,
+                        COEFFS_SENSITIVITY_MISS1, COEFFS_SENSITIVITY_MISS2,
+                        MISS1_HORIZON_LIMITS, MISS2_HORIZON_LIMITS)
 
 processed_images = set()
 
@@ -111,14 +97,14 @@ def create_rgb_columns():
     current_time_UT = datetime.now(timezone.utc)
     current_day = current_time_UT.day 
 
-    spectro_path_dir = os.path.join(spectro_path, current_time_UT.strftime("%Y/%m/%d"))
+    spectro_path_dir = os.path.join(SPECTRO_PATH, current_time_UT.strftime("%Y/%m/%d"))
 
     if current_time_UT.day != current_day:
         processed_images.clear()
         current_day = current_time_UT.day
 
     ensure_directory_exists(spectro_path_dir)
-    output_folder = os.path.join(output_folder_base, current_time_UT.strftime("%Y/%m/%d"))
+    output_folder = os.path.join(OUTPUT_FOLDER_BASE, current_time_UT.strftime("%Y/%m/%d"))
     ensure_directory_exists(output_folder)
 
     matching_files = [f for f in os.listdir(spectro_path_dir) if f.endswith(".png")]
@@ -141,9 +127,9 @@ def create_rgb_columns():
 
         # Determine the spectrograph type (MISS1 or MISS2) from the filename
         if "MISS1" in filename:
-            pixel_range = miss1_horizon_limits
+            pixel_range = MISS1_HORIZON_LIMITS
         elif "MISS2" in filename:
-            pixel_range = miss2_horizon_limits
+            pixel_range = MISS2_HORIZON_LIMITS
         else:
             print(f"Unknown spectrograph type for {filename}")
             continue
