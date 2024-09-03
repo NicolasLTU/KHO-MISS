@@ -26,16 +26,16 @@ import AtikSDK
 import time
 from parameters import parameters
 
-# Extract values from parameters
+# Extract values from parameters.py
 device_name = parameters['device_name']  # Device name (e.g., MISS1, MISS2)
-raw_PNG_folder = parameters['raw_PNG_folder']  # Directory for saving captured images
+raw_PNG_folder = parameters['RAW_PNG_DIR']  # Directory for saving captured images
 exposure_duration = parameters['exposure_duration']  # Exposure time per image
 optimal_temperature = parameters['optimal_temperature']  # Optimal temperature for camera cooling
 imaging_cadence = parameters['imaging_cadence']  # Time interval between consecutive image captures
 binX = parameters['binX']  # Horizontal binning factor
 binY = parameters['binY']  # Vertical binning factor
 
-# Camera connection and initialisation
+# Camera connection and initialization
 camera = AtikSDK.AtikSDKCamera()
 camera.connect()
 if camera.is_connected():
@@ -106,6 +106,7 @@ def capture_and_save_images(base_folder, camera):
         except:
             pass
 
+# Main execution
 try:
     capture_and_save_images(raw_PNG_folder, camera)
 except KeyboardInterrupt:
@@ -114,6 +115,7 @@ except Exception as e:
     print(f"An error occurred: {e}")
 finally:
     camera.disconnect()
+
 
 
 
