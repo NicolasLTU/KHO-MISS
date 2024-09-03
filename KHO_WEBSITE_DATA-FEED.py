@@ -1,13 +1,14 @@
+# Import the configuration dictionary from the main script
+from main_script import config  # Replace 'main_script' with the actual name of your main script if different
 import os
 import shutil
 import time
 from PIL import Image
 
-# Define paths
-home_dir = os.path.expanduser("~")
-processed_spectrogram_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms")
-keogram_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Keograms")
-feed_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Feed")
+# Define paths from the configuration dictionary
+processed_spectrogram_dir = config['processed_spectrogram_dir']
+keogram_dir = config['keogram_dir']
+feed_dir = config['feed_dir']
 
 # Ensure Feed directory exists
 os.makedirs(feed_dir, exist_ok=True)
@@ -69,3 +70,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
