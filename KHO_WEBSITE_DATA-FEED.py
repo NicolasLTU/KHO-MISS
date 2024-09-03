@@ -2,15 +2,11 @@ import os
 import shutil
 import time
 from PIL import Image
+import logging
+from parameters import PROCESSED_SPECTROGRAM_DIR, KEOGRAM_DIR, FEED_DIR
 
-# Define paths
-home_dir = os.path.expanduser("~")
-processed_spectrogram_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms")
-keogram_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Keograms")
-feed_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Feed")
-
-# Ensure Feed directory exists
-os.makedirs(feed_dir, exist_ok=True)
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Track last copied files to avoid redundant copies
 last_copied_spectrogram = None
@@ -20,40 +16,42 @@ def verify_image_integrity(file_path):
     try:
         with Image.open(file_path) as img:
             img.verify()  # Verify image integrity
-        with Image.open(file_path) as img:
-            img.load()  # Ensure the file can be loaded fully
         return True
     except Exception as e:
-        print(f"Corrupted or incomplete file detected: {file_path} - {e}")
+        logging.error(f"Corrupted or incomplete file detected: {file_path} - {e}")
         return False
 
 def get_latest_file(directory):
-    files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
-    if not files:
+    try:
+        files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+        if not files:
+            return None
+        latest_file = max(files, key=lambda f: os.path.getmtime(os.path.join(directory, f)))
+        return latest_file
+    except Exception as e:
+        logging.error(f"Error retrieving latest file from {directory}: {e}")
         return None
-    latest_file = max(files, key=lambda f: os.path.getmtime(os.path.join(directory, f)))
-    return latest_file
 
 def copy_latest_to_feed():
     global last_copied_spectrogram, last_copied_keogram
 
     # Retrieve the latest processed spectrogram
-    latest_spectrogram = get_latest_file(processed_spectrogram_dir)
+    latest_spectrogram = get_latest_file(PROCESSED_SPECTROGRAM_DIR)
     if latest_spectrogram and latest_spectrogram != last_copied_spectrogram:
-        spectrogram_path = os.path.join(processed_spectrogram_dir, latest_spectrogram)
+        spectrogram_path = os.path.join(PROCESSED_SPECTROGRAM_DIR, latest_spectrogram)
         if verify_image_integrity(spectrogram_path):
-            shutil.copy(spectrogram_path, feed_dir)
+            shutil.copy(spectrogram_path, FEED_DIR)
             last_copied_spectrogram = latest_spectrogram
-            print(f"Copied spectrogram: {latest_spectrogram} to Feed directory.")
+            logging.info(f"Copied spectrogram: {latest_spectrogram} to Feed directory.")
     
     # Retrieve the latest keogram
-    latest_keogram = get_latest_file(keogram_dir)
+    latest_keogram = get_latest_file(KEOGRAM_DIR)
     if latest_keogram and latest_keogram != last_copied_keogram:
-        keogram_path = os.path.join(keogram_dir, latest_keogram)
+        keogram_path = os.path.join(KEOGRAM_DIR, latest_keogram)
         if verify_image_integrity(keogram_path):
-            shutil.copy(keogram_path, feed_dir)
+            shutil.copy(keogram_path, FEED_DIR)
             last_copied_keogram = latest_keogram
-            print(f"Copied keogram: {latest_keogram} to Feed directory.")
+            logging.info(f"Copied keogram: {latest_keogram} to Feed directory.")
 
 def main():
     while True:
