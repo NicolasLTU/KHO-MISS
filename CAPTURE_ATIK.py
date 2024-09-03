@@ -1,5 +1,5 @@
 '''
-This script is designed to control the MISS spectrograph's Atik414EX camera, capture 4 images per minute (12 SECONDS exposure), 
+This script is designed to control the MISS spectrograph's Atik414EX camera, capture images, 
 and save them as PNG files with 16-bit unsigned integer scaling along with relevant metadata. 
 The images are saved in a directory structure based on the current date (YYYY/MM/DD). The script also supports configuring various camera settings, 
 such as exposure duration, binning, cooling, and the cadence of image captures.
@@ -16,7 +16,6 @@ Device Name (IMPORTANT): Update with device name (MISS1, MISS2...) for correct h
 
 Author: Nicolas Martinez (UNIS/LTU)
 Last update: August 2024
-
 '''
 
 import os
@@ -25,17 +24,16 @@ import datetime
 from PIL import Image, PngImagePlugin
 import AtikSDK
 import time
+from parameters import parameters
 
-# DEVICE NAME (Modify accordingly)
-device_name = "MISS2"
-
-# SETTINGS
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "RAW_PNG")  # Unified path for saving captured images
-exposure_duration = 12  # Exposure time per image (12 SECONDS)
-optimal_temperature = 0  # Optimal temperature for camera cooling (ZERO Celsius)
-imaging_cadence = 15  # Time interval between consecutive image capture starts
-binX = 1  # Horizontal binning
-binY = 1  # Vertical binning
+# Extract values from parameters
+device_name = parameters['device_name']  # Device name (e.g., MISS1, MISS2)
+raw_PNG_folder = parameters['raw_PNG_folder']  # Directory for saving captured images
+exposure_duration = parameters['exposure_duration']  # Exposure time per image
+optimal_temperature = parameters['optimal_temperature']  # Optimal temperature for camera cooling
+imaging_cadence = parameters['imaging_cadence']  # Time interval between consecutive image captures
+binX = parameters['binX']  # Horizontal binning factor
+binY = parameters['binY']  # Vertical binning factor
 
 # Camera connection and initialisation
 camera = AtikSDK.AtikSDKCamera()
@@ -89,7 +87,7 @@ def capture_and_save_images(base_folder, camera):
             image_path = os.path.join(date_folder, f"{device_name}-{timestamp}.png")
 
             metadata = PngImagePlugin.PngInfo()
-            metadata.add_text("Exposure Time", str(exposure_duration) + " seconds")
+            metadata.add_text("Exposure Time", f"{exposure_duration} seconds")
             metadata.add_text("Date/Time", timestamp)
             metadata.add_text("Temperature", f"{current_temperature} C")
             metadata.add_text("Note", f"{device_name} KHO/UNIS")
@@ -116,6 +114,7 @@ except Exception as e:
     print(f"An error occurred: {e}")
 finally:
     camera.disconnect()
+
 
 
 '''
