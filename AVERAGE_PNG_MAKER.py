@@ -44,7 +44,9 @@ def get_device_name_from_metadata(filepath):
         print(f"Error reading metadata from {os.path.basename(filepath)}: {e}")
         return None
 
-def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minutes):
+# AVERAGE_PNG_MAKER.PY
+
+def average_images(config, current_time, processed_minutes):
 
     images_by_minute = defaultdict(list)
     filename_regex = re.compile(r'^.+-(\d{8})-(\d{6})\.png$')  # Regex to match filenames
@@ -52,8 +54,7 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
     # Convert current time to UTC
     current_time_utc = current_time.astimezone(datetime.timezone.utc)
 
-    # Group images based on the minute they belong to
-    for root, dirs, files in os.walk(raw_PNG_folder):
+    for root, dirs, files in os.walk(config['spectro_path']):
         for filename in files:
             filepath = os.path.join(root, filename)
             match = filename_regex.match(filename)
@@ -95,7 +96,7 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
                         count += 1
 
                         # Capture metadata from the first image
-                        if metadata is None:
+                        if metadata is none:
                             metadata = img.info
 
                     except Exception as e:
@@ -106,7 +107,7 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
                     averaged_image = (sum_img_array / count).astype(np.uint16)
                     
                     # Create a shared directory for averaged PNGs
-                    averaged_PNG_folder = os.path.join(PNG_base_folder, "averaged_PNG")
+                    averaged_PNG_folder = os.path.join(config['spectro_path'], "averaged_PNG")
                     os.makedirs(averaged_PNG_folder, exist_ok=True)
 
                     # Create a date-specific folder within the shared directory
@@ -137,8 +138,9 @@ def average_images(PNG_base_folder, raw_PNG_folder, current_time, processed_minu
                     # Update the list of already processed minutes
                     processed_minutes.append(minute_key)
 
-raw_PNG_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG/raw_PNG')
-PNG_base_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG')
+
+# raw_PNG_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG/raw_PNG')
+# PNG_base_folder = os.path.join(os.path.expanduser("~"), '.venvMISS2/MISS2/Captured_PNG')
 
 # List to keep track of processed minutes 
 processed_minutes = []
