@@ -2,10 +2,15 @@ import os
 import shutil
 import time
 from PIL import Image
-from parameters import FEED_DIR, PROCESSED_SPECTROGRAM_DIR, KEOGRAM_DIR
+from parameters import parameters
+
+# Extract paths from parameters
+processed_spectrogram_dir = parameters['processed_spectrogram_dir']
+keogram_dir = parameters['keogram_dir']
+feed_dir = parameters['feed_dir']
 
 # Ensure Feed directory exists
-os.makedirs(FEED_DIR, exist_ok=True)
+os.makedirs(feed_dir, exist_ok=True)
 
 # Track last copied files to avoid redundant copies
 last_copied_spectrogram = None
@@ -33,20 +38,20 @@ def copy_latest_to_feed():
     global last_copied_spectrogram, last_copied_keogram
 
     # Retrieve the latest processed spectrogram
-    latest_spectrogram = get_latest_file(PROCESSED_SPECTROGRAM_DIR)
+    latest_spectrogram = get_latest_file(processed_spectrogram_dir)
     if latest_spectrogram and latest_spectrogram != last_copied_spectrogram:
-        spectrogram_path = os.path.join(PROCESSED_SPECTROGRAM_DIR, latest_spectrogram)
+        spectrogram_path = os.path.join(processed_spectrogram_dir, latest_spectrogram)
         if verify_image_integrity(spectrogram_path):
-            shutil.copy(spectrogram_path, FEED_DIR)
+            shutil.copy(spectrogram_path, feed_dir)
             last_copied_spectrogram = latest_spectrogram
             print(f"Copied spectrogram: {latest_spectrogram} to Feed directory.")
     
     # Retrieve the latest keogram
-    latest_keogram = get_latest_file(KEOGRAM_DIR)
+    latest_keogram = get_latest_file(keogram_dir)
     if latest_keogram and latest_keogram != last_copied_keogram:
-        keogram_path = os.path.join(KEOGRAM_DIR, latest_keogram)
+        keogram_path = os.path.join(keogram_dir, latest_keogram)
         if verify_image_integrity(keogram_path):
-            shutil.copy(keogram_path, FEED_DIR)
+            shutil.copy(keogram_path, feed_dir)
             last_copied_keogram = latest_keogram
             print(f"Copied keogram: {latest_keogram} to Feed directory.")
 
@@ -59,7 +64,7 @@ def main():
 
         # Calculate processing time and determine sleep time
         elapsed_time = time.time() - start_time
-        sleep_time = max(30 - elapsed_time, 0) 
+        sleep_time = max(30 - elapsed_time, 0)  # Sleep for 30 seconds minus processing time
         time.sleep(sleep_time)
 
 if __name__ == "__main__":

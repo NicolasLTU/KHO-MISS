@@ -20,30 +20,22 @@ from PIL import Image
 from datetime import datetime, timezone, timedelta
 import matplotlib.pyplot as plt
 import time
+from parameters import parameters  # Import parameters from parameters.py
 
-# SET SPECTROGRAPH NAME MANUALLY ('MISS1' OR 'MISS2')
-spectrograph = "MISS1"
+# Extract parameters from parameters.py
+spectrograph = parameters['device_name']
+RGB_folder = parameters['RGB_folder']
+keogram_dir = parameters['keogram_dir']
+coeffs_sensitivity = parameters['coeffs_sensitivity']
+num_pixels_y = parameters['num_pixels_y']
+num_minutes = parameters['num_minutes']
 
-# Base directory where the RGB columns are saved (yyyy/mm/dd)
-home_dir = os.path.expanduser("~")
-rgb_dir_base = os.path.join(home_dir, ".venvMISS2", "MISS2", "RGB_columns")
-output_dir = os.path.join(home_dir, ".venvMISS2", "MISS2", "Keograms")
-
-# Define auroral emission line wavelengths in Ångström (thousands of Å)
+# Define auroral emission line wavelengths in Ångström
 emission_wavelengths = {
     'blue': 4278,  # Blue auroral emission line
     'green': 5577, # Green auroral emission line
     'red': 6300    # Red auroral emission line
 }
-
-# Sensitivity correction coefficients for MISS1 and MISS2 (2024)
-coeffs_sensitivity = {
-    'MISS1': [-1.378573e-16, 4.088257e-12, -4.806258e-08, 2.802435e-04, -8.109943e-01, 9.329611e+02],
-    'MISS2': [-1.287537e-16, 3.929045e-12, -4.725879e-08, 2.645489e-04, -7.809561e-01, 9.221457e+02]
-}
-
-num_pixels_y = 300  # Number of pixels along the y-axis (for RGB with 300 rows)
-num_minutes = 24 * 60  # Total number of minutes in a day
 
 def verify_image_integrity(file_path):
     try:
@@ -56,16 +48,16 @@ def verify_image_integrity(file_path):
         print(f"Corrupted PNG detected: {file_path} - {e}")
         return False
 
-# initialise an empty keogram with white pixels
+# Initialise an empty keogram with white pixels
 def initialise_keogram():
     return np.full((num_pixels_y, num_minutes, 3), 255, dtype=np.uint8)
 
 # Load an existing keogram or create a new one if none exists
-def load_existing_keogram(output_dir, spectrograph):
+def load_existing_keogram(keogram_dir, spectrograph):
     current_utc_time = datetime.now(timezone.utc)
     current_date = current_utc_time.strftime('%Y/%m/%d')
 
-    keogram_path = os.path.join(output_dir, current_date, f'{spectrograph}-keogram-{current_utc_time.strftime("%Y%m%d")}.png')
+    keogram_path = os.path.join(keogram_dir, current_date, f'{spectrograph}-keogram-{current_utc_time.strftime("%Y%m%d")}.png')
 
     if os.path.exists(keogram_path):
         with Image.open(keogram_path) as img:
@@ -83,10 +75,10 @@ def load_existing_keogram(output_dir, spectrograph):
         return initialise_keogram(), 0
 
 # Save the updated keogram
-def save_keogram(keogram, output_dir, spectrograph):
+def save_keogram(keogram, keogram_dir, spectrograph):
     current_utc_time = datetime.now(timezone.utc)
     current_date_str = current_utc_time.strftime('%Y%m%d')
-    current_date_dir = os.path.join(output_dir, current_utc_time.strftime('%Y/%m/%d'))
+    current_date_dir = os.path.join(keogram_dir, current_utc_time.strftime('%Y/%m/%d'))
     os.makedirs(current_date_dir, exist_ok=True)
 
     # Ensure that only the core keogram data (300x1440x3) is saved
@@ -153,10 +145,10 @@ def add_rgb_columns(keogram, base_dir, last_processed_minute, spectrograph):
     return keogram
 
 # Save the keogram with subplot analysis
-def save_keogram_with_subplots(keogram, output_dir, spectrograph):
+def save_keogram_with_subplots(keogram, keogram_dir, spectrograph):
     current_utc_time = datetime.now(timezone.utc)
     current_date_str = current_utc_time.strftime('%Y%m%d')
-    current_date_dir = os.path.join(output_dir, current_utc_time.strftime('%Y/%m/%d'))
+    current_date_dir = os.path.join(keogram_dir, current_utc_time.strftime('%Y/%m/%d'))
     os.makedirs(current_date_dir, exist_ok=True)
 
     # Find the last minute with data
@@ -209,7 +201,6 @@ def save_keogram_with_subplots(keogram, output_dir, spectrograph):
     ax_temporal.plot(np.arange(temporal_avg.shape[0]), temporal_avg[:, 0], label="4278 Å", color='b')
     ax_temporal.plot(np.arange(temporal_avg.shape[0]), temporal_avg[:, 1], label="5577 Å", color='g')
     ax_temporal.plot(np.arange(temporal_avg.shape[0]), temporal_avg[:, 2], label="6300 Å", color='r')
-    #ax_temporal.set_xlabel("Time (UT)")
     ax_temporal.set_ylabel("Radiance [kR]")
     ax_temporal.legend()
 
@@ -243,10 +234,8 @@ def save_keogram_with_subplots(keogram, output_dir, spectrograph):
     ax_spatial.plot(spatial_avg[:, 1], np.linspace(90, -90, num_pixels_y), label="5577 Å", color='g')
     ax_spatial.plot(spatial_avg[:, 2], np.linspace(90, -90, num_pixels_y), label="6300 Å", color='r')
     ax_spatial.set_xlabel("Radiance [kR]")
-    #ax_spatial.set_ylabel("Elevation angle [degrees]")
     ax_spatial.set_ylim(-90, 90)
-    # Set Y-Ticks Exactly Every 15 Degrees from -90 to 90
-    ax_spatial.set_yticks(np.arange(-90, 91, 15))  # -90, -75, -60, ..., 75, 90
+    ax_spatial.set_yticks(np.arange(-90, 91, 15))  # Set Y-Ticks Exactly Every 15 Degrees
 
     # Set Y-Tick Labels with Degree Symbol
     ax_spatial.set_yticklabels([f"{int(angle)}°" for angle in np.arange(-90, 91, 15)])
@@ -265,20 +254,17 @@ def save_keogram_with_subplots(keogram, output_dir, spectrograph):
     plt.savefig(keogram_filename)
     plt.close(fig)  # Explicitly close the figure to avoid memory warnings
 
-
-
-# Main function to update keogram every 5 minutes
+# Main function to update keogram every minute
 def main():
     while True:
         try:
             current_utc_time = datetime.now(timezone.utc)
-
-            if current_utc_time.minute % 1 == 0:  # Every 5 minutes
-                keogram, last_processed_minute = load_existing_keogram(output_dir, spectrograph)
-                keogram = add_rgb_columns(keogram, rgb_dir_base, last_processed_minute, spectrograph)
-                save_keogram(keogram, output_dir, spectrograph)
-                save_keogram_with_subplots(keogram, output_dir, spectrograph)
-                print("Update completed.")
+            if current_utc_time.minute % 1 == 0:  # Check every minute
+                keogram, last_processed_minute = load_existing_keogram(keogram_dir, spectrograph)
+                keogram = add_rgb_columns(keogram, RGB_folder, last_processed_minute, spectrograph)
+                save_keogram(keogram, keogram_dir, spectrograph)
+                save_keogram_with_subplots(keogram, keogram_dir, spectrograph)
+                print("Keogram update completed.")
             else:
                 print("Waiting for the next update...")
 

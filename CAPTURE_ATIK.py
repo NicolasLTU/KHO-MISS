@@ -1,5 +1,6 @@
 '''
-This script is designed to control the MISS spectrograph's Atik414EX camera, capture images, 
+
+This script is designed to control the MISS spectrograph's Atik414EX camera, capture 4 images per minute (12 SECONDS exposure), 
 and save them as PNG files with 16-bit unsigned integer scaling along with relevant metadata. 
 The images are saved in a directory structure based on the current date (YYYY/MM/DD). The script also supports configuring various camera settings, 
 such as exposure duration, binning, cooling, and the cadence of image captures.
@@ -16,6 +17,7 @@ Device Name (IMPORTANT): Update with device name (MISS1, MISS2...) for correct h
 
 Author: Nicolas Martinez (UNIS/LTU)
 Last update: August 2024
+
 '''
 
 import os
@@ -26,14 +28,14 @@ import AtikSDK
 import time
 from parameters import parameters
 
-# Extract values from parameters.py
-device_name = parameters['device_name']  # Device name (e.g., MISS1, MISS2)
-raw_PNG_folder = parameters['RAW_PNG_DIR']  # Directory for saving captured images
-exposure_duration = parameters['exposure_duration']  # Exposure time per image
-optimal_temperature = parameters['optimal_temperature']  # Optimal temperature for camera cooling
-imaging_cadence = parameters['imaging_cadence']  # Time interval between consecutive image captures
-binX = parameters['binX']  # Horizontal binning factor
-binY = parameters['binY']  # Vertical binning factor
+# Extract values from parameters
+device_name = parameters['device_name']
+raw_PNG_folder = parameters['raw_PNG_folder']
+exposure_duration = parameters['exposure_duration']
+optimal_temperature = parameters['optimal_temperature']
+imaging_cadence = parameters['imaging_cadence']
+binX = parameters['binX']
+binY = parameters['binY']
 
 # Camera connection and initialization
 camera = AtikSDK.AtikSDKCamera()
@@ -44,9 +46,9 @@ else:
     print("Failed to connect to the camera.")
 
 # Apply camera settings
-camera.set_exposure_speed(exposure_duration)  # Set exposure time
-camera.set_binning(binX, binY)  # Set binning
-camera.set_cooling(optimal_temperature)  # Set cooling temperature
+camera.set_exposure_speed(exposure_duration)
+camera.set_binning(binX, binY)
+camera.set_cooling(optimal_temperature)
 
 def capture_and_save_images(base_folder, camera):
     '''
@@ -106,7 +108,6 @@ def capture_and_save_images(base_folder, camera):
         except:
             pass
 
-# Main execution
 try:
     capture_and_save_images(raw_PNG_folder, camera)
 except KeyboardInterrupt:
@@ -115,7 +116,6 @@ except Exception as e:
     print(f"An error occurred: {e}")
 finally:
     camera.disconnect()
-
 
 
 
@@ -193,7 +193,7 @@ move_internal_filterwheel
 internal_filterwheel_info
 
 Other Features:
-initialize_lens
+initialise_lens
 set_lens_aperture
 get_lens_aperture
 set_lens_focus

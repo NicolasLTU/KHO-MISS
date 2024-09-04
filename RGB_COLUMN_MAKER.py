@@ -9,21 +9,37 @@ Nicolas Martinez (UNIS/LTU) 2024
 import os
 import numpy as np
 from scipy import signal
-from PIL import Image
-from parameters import SPECTRO_PATH, OUTPUT_FOLDER_BASE, MISS1_WAVELENGTH_COEFFS, MISS2_WAVELENGTH_COEFFS, COEFFS_SENSITIVITY_MISS1, COEFFS_SENSITIVITY_MISS2, MISS1_HORIZON_LIMITS, MISS2_HORIZON_LIMITS
+from PIL import Image, PngImagePlugin
+from datetime import datetime, timezone, timedelta
+import time
+from parameters import parameters  # Import parameters from parameters.py
+
+# Extract paths and constants from parameters.py
+spectro_path = parameters['spectro_path']
+output_folder_base = parameters['RGB_folder']
+miss1_wavelength_coeffs = parameters['miss1_wavelength_coeffs']
+miss2_wavelength_coeffs = parameters['miss2_wavelength_coeffs']
+coeffs_sensitivity_miss1 = parameters['coeffs_sensitivity']['MISS1']
+coeffs_sensitivity_miss2 = parameters['coeffs_sensitivity']['MISS2']
+miss1_horizon_limits = parameters['miss1_horizon_limits']
+miss2_horizon_limits = parameters['miss2_horizon_limits']
 
 processed_images = set()
 
+# Function to calculate wavelengths
 def calculate_wavelength(pixel_columns, coeffs):
     return coeffs[0] + coeffs[1] * pixel_columns + coeffs[2] * (pixel_columns ** 2)
 
+# Function to calculate K(lambda)
 def calculate_k_lambda(wavelengths, coeffs):
     return np.polyval(coeffs, wavelengths)
 
+# Ensure directory exists before trying to open or save
 def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+# Verify image integrity
 def verify_image_integrity(file_path):
     try:
         with Image.open(file_path) as img:
@@ -35,78 +51,119 @@ def verify_image_integrity(file_path):
         print(f"Corrupted PNG detected: {file_path} - {e}")
         return False
 
+# Read the PNG image and extract metadata
 def read_png_with_metadata(filename):
     with Image.open(filename) as img:
         raw_data = np.array(img)
-        metadata = img.info  
+        metadata = img.info  # Extract metadata
     return raw_data, metadata
 
+# Extract binning factor from metadata (use binY)
 def extract_binning_from_metadata(metadata):
     binning_info = metadata.get("Binning", "1x1")
     binX, binY = map(int, binning_info.split('x'))
     return binY
 
+# Process and average emission line rows
 def process_emission_line(spectro_array, emission_row, binning_factor, pixel_range):
     num_rows_to_average = max(1, int(12 / binning_factor))
     start_row = max(emission_row - num_rows_to_average // 2, 0)
     end_row = min(emission_row + num_rows_to_average // 2, spectro_array.shape[0])
 
+    # Crop the array to the desired pixel range
     spectro_array_cropped = spectro_array[pixel_range[0]:pixel_range[1], :]
+
     extracted_rows = spectro_array_cropped[start_row:end_row, :]
     processed_rows = signal.medfilt2d(extracted_rows.astype('float32'))
     averaged_row = np.mean(processed_rows, axis=0)
     return averaged_row.flatten()
 
+# Function to create the RGB image from the extracted rows
 def create_rgb_column(spectro_array, row_630, row_558, row_428, binning_factor, pixel_range):
+    # Process each emission line and extract the corresponding rows
     column_RED = process_emission_line(spectro_array, row_630, binning_factor, pixel_range)
     column_GREEN = process_emission_line(spectro_array, row_558, binning_factor, pixel_range)
     column_BLUE = process_emission_line(spectro_array, row_428, binning_factor, pixel_range)
 
+    # Combine the channels into an RGB image
     RGB_image_raw = np.stack((column_RED, column_GREEN, column_BLUE), axis=-1)
+
+    # Scale each channel individually based on its own dynamic range
     scaled_red_channel = np.clip((column_RED - np.min(column_RED)) / (np.max(column_RED) - np.min(column_RED)) * 255, 0, 255).astype(np.uint8)
     scaled_green_channel = np.clip((column_GREEN - np.min(column_GREEN)) / (np.max(column_GREEN) - np.min(column_GREEN)) * 255, 0, 255).astype(np.uint8)
     scaled_blue_channel = np.clip((column_BLUE - np.min(column_BLUE)) / (np.max(column_BLUE) - np.min(column_BLUE)) * 255, 0, 255).astype(np.uint8)
+
+    # Combine the individually scaled channels into the final RGB image
     true_rgb_image = np.stack((scaled_red_channel, scaled_green_channel, scaled_blue_channel), axis=-1)
 
     return true_rgb_image
 
+# Process images to create RGB columns
 def create_rgb_columns():
     global processed_images
 
     current_time_UT = datetime.now(timezone.utc)
     current_day = current_time_UT.day 
 
-    spectro_path_dir = os.path.join(SPECTRO_PATH, current_time_UT.strftime("%Y/%m/%d"))
+    spectro_path_dir = os.path.join(spectro_path, current_time_UT.strftime("%Y/%m/%d"))
 
     if current_time_UT.day != current_day:
         processed_images.clear()
         current_day = current_time_UT.day
 
     ensure_directory_exists(spectro_path_dir)
-    output_folder = os.path.join(OUTPUT_FOLDER_BASE, current_time_UT.strftime("%Y/%m/%d"))
+    output_folder = os.path.join(output_folder_base, current_time_UT.strftime("%Y/%m/%d"))
     ensure_directory_exists(output_folder)
 
-    for filename in os.listdir(spectro_path_dir):
-        if filename.endswith('.png') and filename not in processed_images:
-            file_path = os.path.join(spectro_path_dir, filename)
-            if verify_image_integrity(file_path):
-                spectro_array, metadata = read_png_with_metadata(file_path)
-                binning_factor = extract_binning_from_metadata(metadata)
+    matching_files = [f for f in os.listdir(spectro_path_dir) if f.endswith(".png")]
 
-                if "MISS1" in filename:
-                    row_630, row_558, row_428 = EMISSION_ROWS['MISS1']
-                    pixel_range = MISS1_HORIZON_LIMITS
-                elif "MISS2" in filename:
-                    row_630, row_558, row_428 = EMISSION_ROWS['MISS2']
-                    pixel_range = MISS2_HORIZON_LIMITS
+    for filename in matching_files:
+        if filename in processed_images:
+            continue
 
-                rgb_image = create_rgb_column(spectro_array, row_630, row_558, row_428, binning_factor, pixel_range)
-                output_filename = f"{os.path.splitext(filename)[0]}_RGB.png"
-                output_path = os.path.join(output_folder, output_filename)
-                Image.fromarray(rgb_image).save(output_path)
+        png_file_path = os.path.join(spectro_path_dir, filename)
 
-                processed_images.add(filename)
-                print(f"Created RGB column image for {filename}, saved as {output_filename}")
+        if not verify_image_integrity(png_file_path):
+            print(f"Skipping corrupted image: {filename}")
+            continue
 
-if __name__ == "__main__":
+        # Read image and extract metadata
+        spectro_data, metadata = read_png_with_metadata(png_file_path)
+
+        # Extract binning factor from metadata (using binY)
+        binning_factor = extract_binning_from_metadata(metadata)
+
+        # Determine the spectrograph type (MISS1 or MISS2) from the filename
+        if "MISS1" in filename:
+            pixel_range = miss1_horizon_limits
+        elif "MISS2" in filename:
+            pixel_range = miss2_horizon_limits
+        else:
+            print(f"Unknown spectrograph type for {filename}")
+            continue
+
+        # Use calibrated and adjusted rows to create RGB columns
+        RGB_image = create_rgb_column(spectro_data, 724, 723, 140, binning_factor, pixel_range)  # Adjusted rows used here
+        RGB_pil_image = Image.fromarray(RGB_image.astype('uint8'))
+        resized_RGB_image = RGB_pil_image.resize((1, 300), Image.Resampling.LANCZOS)
+
+        base_filename = filename[:-4]
+        output_filename = f"{base_filename[:-2]}00.png"
+        output_filename_path = os.path.join(output_folder, output_filename)
+
+        resized_RGB_image.save(output_filename_path)
+        print(f"Saved RGB column image: {output_filename}")
+
+        processed_images.add(filename)
+
+# Main loop to constantly monitor for new images and process them
+while True:
+    start_time = time.time()  # Record the start time of the loop
+    
     create_rgb_columns()
+    
+    # Calculate the time to wait until the start of the next minute
+    elapsed_time = time.time() - start_time
+    sleep_time = 60 - elapsed_time  
+    if sleep_time > 0:
+        time.sleep(sleep_time)
