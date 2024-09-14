@@ -127,7 +127,7 @@ if __name__ == "__main__":
                 processes = []
 
                 # Start new processes
-                processes.append(start_subprocess("KEOGRAM_MAKER.PY"))
+                processes.append(start_subprocess("TEST_KEO_ANALYTICS.PY"))
                 processes.append(start_subprocess("RGB_COLUMN_MAKER.PY"))
                 processes.append(start_subprocess("AVERAGE_PNG_MAKER.PY"))
                 processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.PY"))

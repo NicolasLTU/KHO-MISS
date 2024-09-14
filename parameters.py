@@ -28,11 +28,11 @@ parameters = {
     'binX': 2,  # Horizontal binning
     'binY': 2,  # Vertical binning
 
-    # Spectral Coefficients
+    # Spectral Coefficients [a_0, a_1, a_2] - Starting from last pixel row to first pixel row - spectrogram inversion caused by Artemis Software [in Ångström/pixel row]
     'miss1_wavelength_coeffs': [4217.273360, 2.565182, 0.000170],
     'miss2_wavelength_coeffs': [4088.509, 2.673936, 1.376154e-4],
 
-    # Sensitivity correction coefficients for MISS1 and MISS2
+    # Sensitivity correction coefficients for MISS1 and MISS2 [a_5, a_4, a_3, a_2, a_1, a_0] - Starting from last pixel row to first pixel row - spectrogram inversion caused by Artemis Software [in R/Å]
     'coeffs_sensitivity': {
         'MISS1': [-1.378573e-16, 4.088257e-12, -4.806258e-08, 2.802435e-04, -8.109943e-01, 9.329611e+02],
         'MISS2': [-1.287537e-16, 3.929045e-12, -4.725879e-08, 2.645489e-04, -7.809561e-01, 9.221457e+02]
