@@ -1,7 +1,7 @@
 """
 This script processes PNG images captured by MISS*, averages them minute-wise, and saves the averaged images in a 
 shared `averaged_PNG` directory. The script checks the device name in the image metadata to determine which device captured the image. 
-The processed images are then saved using the device name in the filename, and the relevant metadata is preserved with a note indicating that the image is a 1-minute average.
+The processed images are then saved using the device name in the filename, and the relevant metadata is preserved with a note indicating that the image is a 1-minute spectrogram average.
 
 Parameters:
 1. PNG_base_folder (str): The base directory where the averaged images will be saved.
@@ -10,7 +10,7 @@ Parameters:
 4. processed_minutes (list): A list to keep track of already processed minutes
 
 Author: Nicolas Martinez (UNIS/LTU)
-Last update: August 2024
+Last update: September 2024
 """
 
 import os

@@ -73,16 +73,16 @@ def save_keogram_with_axes(keogram, keogram_dir, spectrograph):
     os.makedirs(current_date_dir, exist_ok=True)
 
     # Create figure for keogram with axes and units
-    fig, ax = plt.subplots(figsize=(20, 10))
+    fig, ax = plt.subplots(figsize=(24, 10))
     ax.imshow(keogram, aspect='auto', extent=[0, num_minutes, 90, -90])
 
     # Set correct title format for the keogram
     spectrograph_title = "I" if spectrograph == "MISS1" else "II"
-    ax.set_title(f"Meridian Imaging Svalbard Spectrograph {spectrograph_title} {current_utc_time.strftime('%Y-%m-%d')}", fontsize=20)
+    ax.set_title(f"Meridian Imaging Svalbard Spectrograph {spectrograph_title} {current_utc_time.strftime('%Y-%m-%d')}", fontsize=28)
 
     # Set axis labels and ticks
-    ax.set_xlabel("Time (UT)")
-    ax.set_ylabel("Elevation angle [degrees]")
+    ax.set_xlabel("Time (UT)", fontsize=15)
+    ax.set_ylabel("Elevation angle [degrees]", fontsize=15)
 
     # Set x-axis ticks for time (every 2 hours)
     x_ticks = np.arange(0, num_minutes + 1, 120)
@@ -143,7 +143,7 @@ def main():
     while True:
         try:
             current_utc_time = datetime.now(timezone.utc)
-            if current_utc_time.minute % 5 == 0:  # Check every 5 minute
+            if current_utc_time.minute % 1 == 0:  # Check every 5 minute
                 keogram, last_processed_minute = load_existing_keogram(keogram_dir, spectrograph)
                 keogram = add_rgb_columns(keogram, RGB_folder, last_processed_minute, spectrograph)
                 save_keogram_with_axes(keogram, keogram_dir, spectrograph)

@@ -3,8 +3,8 @@ This program operates the MISS's Atik 414EX and Sunshield Lens shutter when the 
 
 1. Initialise serial communication for SunShield control.
 2. Define a function to terminate smoothly (ctrl + C)
-3. Check if it is nighttime using a specific function.
-4. Manage the Atik camera and SunShield based on nighttime conditions.
+3. Check if it is darktime using a specific function.
+4. Manage the Atik camera and SunShield based on darktime conditions.
 5. Run a loop that checks conditions every 60 seconds and updates the system.
 6. Handle interrupts by stopping subprocesses and exiting the script.
 
@@ -18,7 +18,7 @@ import subprocess
 import time
 import serial
 import os
-from night_condition_calculator import it_is_nighttime  # Program used to check if the Sun is below -10 degrees of elevation at KHO (Kjell Henriksen Observatory), returns a Boolean
+from night_condition_calculator import it_is_darktime  # Program used to check if the Sun is below -10 degrees of elevation at KHO (Kjell Henriksen Observatory), returns a Boolean
 from sunshield_controller import SunShield_CLOSE, SunShield_OPEN, init_serial  # Control of the SunShield shutter: Close, Open, Settings for communication to the Serial Port 'COM3'
 
 running = True
@@ -67,10 +67,10 @@ if __name__ == "__main__":
             if current_time - last_execution_time >= 60:  # Check every 60 seconds
                 last_execution_time = current_time
 
-                if it_is_nighttime():
+                if it_is_darktime():
                     if is_currently_night is not True:  # Check for transition day-night
                         is_currently_night = True
-                        print('Nighttime: Camera and SunShield Operational')
+                        print('darktime: Camera and SunShield Operational')
                     if ser:
                         SunShield_OPEN(ser)  # Open the SunShield
                     if not image_capture_process or not check_atik_process():  # Only start the process if it's not running or has failed

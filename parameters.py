@@ -13,7 +13,7 @@ parameters = {
     'device_name': 'MISS2',  # Update this if needed
 
     # Paths
-    'raw_PNG_folder': os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "raw_PNG"),
+    'raw_PNG_folder': os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "spectrograms_PNG"),
     'averaged_PNG_folder': os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG"),
     'processed_spectrogram_dir': os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Captured_PNG", "Processed_spectrograms"),
     'keogram_dir': os.path.join(os.path.expanduser("~"), ".venvMISS2", "MISS2", "Keograms"),
