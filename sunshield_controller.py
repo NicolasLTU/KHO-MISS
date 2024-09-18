@@ -14,7 +14,7 @@ import serial.tools.list_ports
 
 def init_serial():
     '''
-    Initializes the serial connection to the SunShield shutter.
+    Initialises the serial connection to the SunShield shutter.
     
     Returns:
         Serial object if successful, None otherwise.
@@ -31,7 +31,7 @@ def init_serial():
             rtscts=False,
             dsrdtr=False
         )  # Parameters according to SunShield User Manual (Keo Scientific)
-        print("Serial port initialized successfully.")
+        print("Serial port initialised successfully.")
         return ser
     except FileNotFoundError as e:
         print(f"Failed to open serial port: {e}")
@@ -74,4 +74,4 @@ if __name__ == "__main__":
         SunShield_CLOSE(ser)   
         ser.close()
     else:
-        print("Unable to initialize serial connection.")
+        print("Unable to initialise serial connection.")
