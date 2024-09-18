@@ -1,15 +1,15 @@
 '''
-MAIN SPECTROGRAM PROCESSING PROGRAM: Launches and make sure all involved scripts are active (minute-averaged spectrogram 
+MAIN SPECTROGRAM PROCESSING PROGRAM: Launches and makes sure all involved scripts are active (minute-averaged spectrogram 
 with spectral and spatial analysis and keogram based on latest available data from MISS 1 or 2 updated live). 
 
-1. Initialises a list to track subprocesses.
-2. Defines a function to terminate all subprocesses safely (ctrl + C).
-4. Launches multiple subprocesses (keogram maker, RGB column maker, average PNG maker, kho_website_feed, spectrogram processor, and Feeder).
-5. Enters a loop to keep processes running, checking every 60 seconds.
-6. On interrupt, stops all subprocesses and exits.
+1. Initialise a list to track subprocesses.
+2. Define a function to terminate all subprocesses safely (ctrl + C).
+3. Launche multiple subprocesses (keogram maker, RGB column maker, average PNG maker, kho_website_feed, spectrogram processor, and Feeder).
+4. Enter a loop to keep processes running, checking every 60 seconds.
+5. On interrupt, stop all subprocesses and exits.
 
 Author: Nicolas Martinez (UNIS/LTU)
-Last update: August 2024
+Last update: September 2024
 '''
 
 import signal
