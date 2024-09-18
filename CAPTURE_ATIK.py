@@ -16,7 +16,7 @@ Settings:
 Device Name (IMPORTANT): Update with device name (MISS1, MISS2...) for correct handling of the data!!
 
 Author: Nicolas Martinez (UNIS/LTU)
-Last update: August 2024
+Last update: September 2024
 
 '''
 
