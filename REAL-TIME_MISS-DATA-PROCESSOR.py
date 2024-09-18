@@ -74,8 +74,8 @@ if __name__ == "__main__":
                 processes.append(start_subprocess("RGB_COLUMN_MAKER.py"))
                 processes.append(start_subprocess("AVERAGE_PNG_MAKER.py"))
                 processes.append(start_subprocess("SPECTROGRAM_PROCESSOR.py"))
-                processes.append(start_subprocess("KHO_WEBSITE_DATE-FEED.py"))
-                processes.append(start_subprocess("Feeder.py"))  # Launch the Feeder script
+                processes.append(start_subprocess("KHO_WEBSITE_DATA-FEED.py"))
+                processes.append(start_subprocess("Routine_eraser.py"))
 
                 # Confirm that all processes were started
                 if verify_processes(processes):
