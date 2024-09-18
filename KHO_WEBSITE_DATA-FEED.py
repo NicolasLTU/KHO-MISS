@@ -42,18 +42,21 @@ def copy_latest_to_feed():
     if latest_spectrogram and latest_spectrogram != last_copied_spectrogram:
         spectrogram_path = os.path.join(processed_spectrogram_dir, latest_spectrogram)
         if verify_image_integrity(spectrogram_path):
-            shutil.copy(spectrogram_path, feed_dir)
+            # Copy the latest spectrogram to the feed directory (overwrite if exists)
+            shutil.copy(spectrogram_path, os.path.join(feed_dir, latest_spectrogram))
             last_copied_spectrogram = latest_spectrogram
-            print(f"Copied spectrogram: {latest_spectrogram} to Feed directory.")
-    
+            print(f"Copied latest spectrogram: {latest_spectrogram} to Feed directory.")
+
     # Retrieve the latest keogram
     latest_keogram = get_latest_file(keogram_dir)
     if latest_keogram and latest_keogram != last_copied_keogram:
         keogram_path = os.path.join(keogram_dir, latest_keogram)
         if verify_image_integrity(keogram_path):
-            shutil.copy(keogram_path, feed_dir)
+            # Copy the latest keogram to the feed directory (overwrite if exists)
+            shutil.copy(keogram_path, os.path.join(feed_dir, latest_keogram))
             last_copied_keogram = latest_keogram
-            print(f"Copied keogram: {latest_keogram} to Feed directory.")
+            print(f"Copied latest keogram: {latest_keogram} to Feed directory.")
+
 
 def main():
     while True:
