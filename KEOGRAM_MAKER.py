@@ -11,6 +11,8 @@ emission lines of the aurora:
 - **Blue channel**: 4278 Å (Nitrogen emission line)
 
 Author: Nicolas Martinez (UNIS/LTU)
+Last Update: September 2024
+
 """
 
 import os
