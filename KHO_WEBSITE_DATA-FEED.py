@@ -1,3 +1,12 @@
+'''
+This script retrieves the latest processed spectrogram and keogram and copy them to a directory simulating KHO's dedicated html, effectively replacing the former updates. 
+
+Author: Nicolas Martinez (LTU/KHO)
+
+Last update: September 2024
+
+'''
+
 import os
 import shutil
 import time
