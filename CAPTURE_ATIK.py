@@ -37,13 +37,22 @@ imaging_cadence = parameters['imaging_cadence']
 binX = parameters['binX']
 binY = parameters['binY']
 
-# Camera connection and initialization
-camera = AtikSDK.AtikSDKCamera()
-camera.connect()
-if camera.is_connected():
-    print("Connected device:", camera.get_device_name(0))
-else:
-    print("Failed to connect to the camera.")
+# Try to connect to the camera, retry if it fails.
+def connect_camera():
+    while True:
+        try:
+            camera = AtikSDK.AtikSDKCamera()  # Recreate the camera object for each attempt
+            camera.connect()  # Try connecting to the camera
+            if camera.is_connected():
+                print("Connected device:", camera.get_device_name(0))  # Print connected device
+                return camera  # Return the connected camera object
+            else:
+                print("Failed to connect to the camera. Retrying in 30 seconds...")
+        except Exception as e:
+            print(f"Error during camera connection: {e}")  # Handle and print connection error
+        time.sleep(30)  # Wait 30 seconds before retrying
+
+camera = connect_camera()  # Use the retry logic to ensure connection succeeds
 
 # Apply camera settings
 camera.set_exposure_speed(exposure_duration)
