@@ -9,7 +9,7 @@ This program operates the MISS's Atik 414EX and Sunshield Lens shutter when the 
 6. Handle interrupts by stopping subprocesses and exiting the script.
 
 Author: Nicolas Martinez (UNIS/LTU)
-Last update: August 2024
+Last update: September 2024
 
 '''
 
