@@ -145,7 +145,7 @@ def main():
     while True:
         try:
             current_utc_time = datetime.now(timezone.utc)
-            if current_utc_time.minute % 1 == 0:  # Check every 5 minute
+            if current_utc_time.minute % 5 == 0:  # Check every 5 minute
                 keogram, last_processed_minute = load_existing_keogram(keogram_dir, spectrograph)
                 keogram = add_rgb_columns(keogram, RGB_folder, last_processed_minute, spectrograph)
                 save_keogram_with_axes(keogram, keogram_dir, spectrograph)
