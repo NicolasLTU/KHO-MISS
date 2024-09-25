@@ -1,5 +1,5 @@
 """
-This script processes spectrogram images from the MISS1 and MISS2 spectrographs. It handles image orientation 
+This script processes averaged spectrogram images from the MISS1 and MISS2 spectrographs. It handles image orientation 
 (flipping and rotating), performs background subtraction, and applies wavelength and sensitivity calibration 
 to prepare the data for spectral and spatial analysis.
 
