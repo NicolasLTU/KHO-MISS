@@ -48,7 +48,7 @@ def delete_old_directories(base_path):
 # Main function to run the cleanup every ten minutes
 def main():
     paths = {
-        'raw_PNG_folder': parameters.parameters['raw_PNG_folder'],
+        'processed_spectrogram_folder': parameters.parameters['processed_spectrogram_dir'],
         'averaged_PNG_folder': parameters.parameters['averaged_PNG_folder'],
         'RGB_folder': parameters.parameters['RGB_folder']
     }
