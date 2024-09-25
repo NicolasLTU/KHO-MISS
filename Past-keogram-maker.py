@@ -1,3 +1,14 @@
+'''
+
+This script allows the user to perform the generation of a keogramfor any date with available captured spectrogram.
+
+Author: Nicolas Martinez (LTU/UNIS)
+
+Last update: September 2024
+
+'''
+
+
 import os
 import numpy as np
 from PIL import Image, PngImagePlugin
@@ -7,7 +18,9 @@ from collections import defaultdict
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-# Directories and parameters
+# parameters (Need to be correctly modified by user)
+
+# Directories
 home_dir = os.path.expanduser("~")
 raw_PNG_folder = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "raw_PNG")
 averaged_PNG_folder = os.path.join(home_dir, ".venvMISS2", "MISS2", "Captured_PNG", "averaged_PNG")
