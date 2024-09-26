@@ -1,6 +1,10 @@
 '''
 
-This script allows the user to perform the generation of a keogramfor any date with available captured spectrogram.
+This script allows the user to perform the generation of a keogram for any date with available captured spectrogram. 
+
+It asks the user to:
+- Select spectrograph (MISS 1 or MISS 2)
+- Choose a keogram with or without spatial and temporal plots. 
 
 Author: Nicolas Martinez (LTU/UNIS)
 
