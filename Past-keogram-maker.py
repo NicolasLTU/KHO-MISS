@@ -1,18 +1,18 @@
 '''
-
-This script allows the user to perform the generation of a keogram for any date with available captured spectrogram. 
+This script allows the user to perform the generation of a keogram for any date with available captured spectrogram.
 
 It asks the user to:
 - Pick a date to generate the keogram for
 - Select spectrograph (MISS 1 or MISS 2)
-- Choose a keogram with or without spatial and temporal plots. 
+- Choose a keogram with or without spatial and temporal plots.
+
+It accounts for the fact the calibration was made on automatically flipped spectrograms (Artemis Software)
 
 Author: Nicolas Martinez (LTU/UNIS)
 
 Last update: September 2024
 
 '''
-
 
 import os
 import numpy as np
@@ -110,7 +110,12 @@ def average_images(processed_minutes, device_name):
 # Function to calculate the pixel row for a given wavelength
 def wavelength_to_pixel_row(wavelength, coeffs):
     """Converts a given wavelength to the corresponding pixel row using the polynomial coefficients."""
-    return np.roots([coeffs[2], coeffs[1], coeffs[0] - wavelength]).real[0]
+    return np.polyval(coeffs[::-1], wavelength)  # Apply coeffs in the order (A0, A1, A2)
+
+# Function to calculate radiance based on sensitivity coefficients
+def calculate_radiance(pixel_value, coeffs, num_pixels_y, row):
+    flipped_row = num_pixels_y - row  # Flip the row index - calibration coeffs are for flipped spectrogram!!!!
+    return np.polyval(coeffs, flipped_row)  # Apply the sensitivity coefficients
 
 # Function to scale RGB channels based on their dynamic range
 def scale_channel(channel_data):
@@ -135,7 +140,7 @@ def process_emission_line(spectro_array, emission_row, binning_factor, pixel_ran
     return averaged_row.flatten()
 
 # Create the RGB image from the extracted rows
-def create_rgb_column(spectro_array, wavelengths, coeffs, binning_factor, pixel_range):
+def create_rgb_column(spectro_array, wavelengths, coeffs, sensitivity_coeffs, binning_factor, pixel_range):
     # Calculate the pixel rows for each emission line
     row_630 = int(wavelength_to_pixel_row(wavelengths['6300'], coeffs))
     row_558 = int(wavelength_to_pixel_row(wavelengths['5577'], coeffs))
@@ -146,10 +151,15 @@ def create_rgb_column(spectro_array, wavelengths, coeffs, binning_factor, pixel_
     column_GREEN = process_emission_line(spectro_array, row_558, binning_factor, pixel_range)
     column_BLUE = process_emission_line(spectro_array, row_428, binning_factor, pixel_range)
 
+    # Apply radiance calibration using sensitivity coefficients
+    column_RED_radiance = calculate_radiance(column_RED, sensitivity_coeffs)
+    column_GREEN_radiance = calculate_radiance(column_GREEN, sensitivity_coeffs)
+    column_BLUE_radiance = calculate_radiance(column_BLUE, sensitivity_coeffs)
+
     # Apply dynamic scaling to each channel
-    scaled_red_channel = scale_channel(column_RED)
-    scaled_green_channel = scale_channel(column_GREEN)
-    scaled_blue_channel = scale_channel(column_BLUE)
+    scaled_red_channel = scale_channel(column_RED_radiance)
+    scaled_green_channel = scale_channel(column_GREEN_radiance)
+    scaled_blue_channel = scale_channel(column_BLUE_radiance)
 
     # Stack the columns together to form an RGB image
     true_rgb_image = np.stack((scaled_red_channel, scaled_green_channel, scaled_blue_channel), axis=-1)
@@ -181,8 +191,10 @@ def create_rgb_columns_for_day(date_str, spectrograph):
     # Choose the appropriate wavelength coefficients based on the spectrograph
     if spectrograph == 'MISS1':
         coeffs = parameters['miss1_wavelength_coeffs']
+        sensitivity_coeffs = parameters['coeffs_sensitivity']['MISS1']
     elif spectrograph == 'MISS2':
         coeffs = parameters['miss2_wavelength_coeffs']
+        sensitivity_coeffs = parameters['coeffs_sensitivity']['MISS2']
     else:
         raise ValueError(f"Unknown spectrograph: {spectrograph}")
 
@@ -200,7 +212,7 @@ def create_rgb_columns_for_day(date_str, spectrograph):
 
         pixel_range = parameters['miss2_horizon_limits'] if spectrograph == 'MISS2' else parameters['miss1_horizon_limits']
 
-        RGB_image = create_rgb_column(spectro_data, wavelengths, coeffs, binning_factor, pixel_range)
+        RGB_image = create_rgb_column(spectro_data, wavelengths, coeffs, sensitivity_coeffs, binning_factor, pixel_range)
 
         if RGB_image.shape != (parameters['num_pixels_y'], 1, 3):
             print(f"Error: Unexpected shape {RGB_image.shape} for {filename}. Skipping this image.")
@@ -232,9 +244,9 @@ def save_keogram_with_subplots(keogram, output_dir, date_str, spectrograph, add_
 
         # Plot the temporal data in hours
         hours = np.linspace(0, 24, parameters['num_minutes'])
-        ax1.plot(hours, np.random.normal(125, 5, parameters['num_minutes']), color='red', label='6300 Å')
-        ax1.plot(hours, np.random.normal(126, 5, parameters['num_minutes']), color='green', label='5577 Å')
-        ax1.plot(hours, np.random.normal(127, 5, parameters['num_minutes']), color='blue', label='4278 Å')
+        ax1.plot(hours, keogram.mean(axis=0)[:, 0], color='red', label='6300 Å')
+        ax1.plot(hours, keogram.mean(axis=0)[:, 1], color='green', label='5577 Å')
+        ax1.plot(hours, keogram.mean(axis=0)[:, 2], color='blue', label='4278 Å')
         ax1.set_ylabel("Radiance [kR]")
         ax1.set_xlabel("Time [Hours]")
         ax1.legend()
@@ -251,9 +263,9 @@ def save_keogram_with_subplots(keogram, output_dir, date_str, spectrograph, add_
         ax2.set_yticklabels(['90° S', '60° S', '30° S', 'Zenith', '30° N', '60° N', '90° N'])
 
         # Spatial data subplot
-        ax3.plot(np.random.normal(125, 5, parameters['num_minutes']), np.linspace(-90, 90, parameters['num_minutes']), color='red', label='6300 Å')
-        ax3.plot(np.random.normal(126, 5, parameters['num_minutes']), np.linspace(-90, 90, parameters['num_minutes']), color='green', label='5577 Å')
-        ax3.plot(np.random.normal(127, 5, parameters['num_minutes']), np.linspace(-90, 90, parameters['num_minutes']), color='blue', label='4278 Å')
+        ax3.plot(keogram[:, :, 0].mean(axis=1), np.linspace(-90, 90, parameters['num_pixels_y']), color='red', label='6300 Å')
+        ax3.plot(keogram[:, :, 1].mean(axis=1), np.linspace(-90, 90, parameters['num_pixels_y']), color='green', label='5577 Å')
+        ax3.plot(keogram[:, :, 2].mean(axis=1), np.linspace(-90, 90, parameters['num_pixels_y']), color='blue', label='4278 Å')
         ax3.set_xlabel("Radiance [kR]")
         ax3.set_ylabel("Elevation angle [degrees]")
         ax3.set_yticks(np.linspace(-90, 90, num=7))
@@ -263,7 +275,7 @@ def save_keogram_with_subplots(keogram, output_dir, date_str, spectrograph, add_
     else:
         ax = fig.add_subplot(111)
         ax.imshow(keogram, aspect='auto', extent=[0, 24*60, 90, -90])
-        ax.set_title(f"{spectrograph} Keogram for {date_str.replace('/', '-')}", fontsize=24)
+        ax.set_title(f"{spectrograph} Keogram for {date_str.replace("/", "-")}", fontsize=24)
         ax.set_xticks(np.append(np.arange(0, 24*60, 120), 24*60))
         ax.set_xticklabels([f"{hour}:00" for hour in range(0, 24, 2)] + ["24:00"])
         ax.set_xlabel("Time (UT)")
@@ -344,3 +356,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
