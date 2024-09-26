@@ -3,6 +3,7 @@
 This script allows the user to perform the generation of a keogram for any date with available captured spectrogram. 
 
 It asks the user to:
+- Pick a date to generate the keogram for
 - Select spectrograph (MISS 1 or MISS 2)
 - Choose a keogram with or without spatial and temporal plots. 
 
