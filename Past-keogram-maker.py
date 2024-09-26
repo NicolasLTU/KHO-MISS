@@ -262,7 +262,7 @@ def save_keogram_with_subplots(keogram, output_dir, date_str, spectrograph, add_
     else:
         ax = fig.add_subplot(111)
         ax.imshow(keogram, aspect='auto', extent=[0, 24*60, 90, -90])
-        ax.set_title(f"{spectrograph} Keogram for {date_str.replace('/', '-')}", fontsize=20)
+        ax.set_title(f"{spectrograph} Keogram for {date_str.replace('/', '-')}", fontsize=24)
         ax.set_xticks(np.append(np.arange(0, 24*60, 120), 24*60))
         ax.set_xticklabels([f"{hour}:00" for hour in range(0, 24, 2)] + ["24:00"])
         ax.set_xlabel("Time (UT)")
