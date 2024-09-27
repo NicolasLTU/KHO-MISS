@@ -114,7 +114,8 @@ def wavelength_to_pixel_row(wavelength, coeffs):
 
 # Function to calculate radiance based on sensitivity coefficients
 def calculate_radiance(pixel_value, coeffs, num_pixels_y, row):
-    return np.polyval(coeffs, row)
+    flipped_row = num_pixels_y - row  # Flip the row index - calibration coeffs are for flipped spectrogram!!!!
+    return np.polyval(coeffs, flipped_row)  # Apply the sensitivity coefficients
 
 
 # Function to scale RGB channels based on their dynamic range
