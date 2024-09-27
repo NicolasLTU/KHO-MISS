@@ -22,8 +22,8 @@ def it_is_darktime():
 
     sun_position = get_sun(now).transform_to(frame_now)
 
-    # Check if the sun's altitude is greater than 0 degrees (above the horizon)
-    return sun_position.alt > -10 * u.deg and sun_position # Sun position needs to be below -10 degrees to exclude dawn/twilight. 
+    # Check if the sun's elevation is lower than -10 degrees (below the horizon)
+    return sun_position.alt < -10 * u.deg # Sun position needs to be below -10 degrees to exclude dawn/twilight. 
 
 if __name__ == "__main__":
     if it_is_darktime():
