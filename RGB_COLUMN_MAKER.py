@@ -134,7 +134,7 @@ def create_rgb_column(spectro_array, row_6300, row_5577, row_4278, binning_facto
 
     return true_rgb_image
 
-# Process images to create RGB columns
+# Process images to create RGB columns with k_lambda for proper RGB ratios
 def create_rgb_columns():
     global processed_images, current_day
 
@@ -172,9 +172,11 @@ def create_rgb_columns():
         if "MISS1" in filename:
             pixel_range = miss1_horizon_limits
             coeffs = miss1_wavelength_coeffs
+            coeffs_sensitivity = coeffs_sensitivity_miss1
         elif "MISS2" in filename:
             pixel_range = miss2_horizon_limits
             coeffs = miss2_wavelength_coeffs
+            coeffs_sensitivity = coeffs_sensitivity_miss2
         else:
             print(f"Unknown spectrograph type for {filename}")
             continue
@@ -197,9 +199,15 @@ def create_rgb_columns():
         row_5577 = max_pixel_value - int(round(row_5577))
         row_4278 = max_pixel_value - int(round(row_4278))
 
-        # Use calculated rows to create RGB columns
+        # Calculate k_lambda values for each emission line to apply calibration
+        k_lambda_6300 = calculate_k_lambda(6300, coeffs_sensitivity)
+        k_lambda_5577 = calculate_k_lambda(5577, coeffs_sensitivity)
+        k_lambda_4278 = calculate_k_lambda(4278, coeffs_sensitivity)
+
+        # Use calculated rows and k_lambda values to create RGB columns
         RGB_image = create_rgb_column(
-            spectro_data, row_6300, row_5577, row_4278, binning_factor, pixel_range
+            spectro_data, row_6300, row_5577, row_4278, binning_factor, pixel_range, 
+            k_lambda_6300, k_lambda_5577, k_lambda_4278
         )
         RGB_pil_image = Image.fromarray(RGB_image.astype('uint8'), mode='RGB')
         resized_RGB_image = RGB_pil_image.resize((1, 300), Image.LANCZOS)
@@ -212,6 +220,7 @@ def create_rgb_columns():
         print(f"Saved RGB column image: {output_filename}")
 
         processed_images.add(filename)
+
 
 # Main loop to constantly monitor for new images and process them
 while True:
