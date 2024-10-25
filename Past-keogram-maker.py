@@ -317,24 +317,40 @@ def add_rgb_columns(keogram, base_dir, last_processed_minute, date_str, spectrog
         print(f"No directory found for the date ({today_RGB_dir}). Proceeding with blank RGB data.")
         today_RGB_dir = None
 
+    # Select the appropriate sensitivity coefficients for the spectrograph
+    if spectrograph == 'MISS1':
+        sensitivity_coeffs = parameters['coeffs_sensitivity']['MISS1']
+    elif spectrograph == 'MISS2':
+        sensitivity_coeffs = parameters['coeffs_sensitivity']['MISS2']
+    else:
+        raise ValueError(f"Unknown spectrograph: {spectrograph}")
+
     for minute in tqdm(range(last_processed_minute + 1, parameters['num_minutes']), desc="Adding RGB columns to keogram", unit="minute"):
         filename = f"{spectrograph}-{date_str.replace('/', '')}-{minute // 60:02d}{minute % 60:02d}00.png"
         file_path = os.path.join(today_RGB_dir, filename) if today_RGB_dir else None
 
         if file_path and os.path.exists(file_path) and verify_image_integrity(file_path):
             try:
+                # Open the RGB column and convert it to a NumPy array
                 rgb_data = np.array(Image.open(file_path))
+
+                # Ensure k_lambda calibration for each channel
+                rgb_data[:, 0] = calculate_radiance(rgb_data[:, 0], sensitivity_coeffs, parameters['num_pixels_y'], 6300)
+                rgb_data[:, 1] = calculate_radiance(rgb_data[:, 1], sensitivity_coeffs, parameters['num_pixels_y'], 5577)
+                rgb_data[:, 2] = calculate_radiance(rgb_data[:, 2], sensitivity_coeffs, parameters['num_pixels_y'], 4278)
 
                 if rgb_data.shape != (parameters['num_pixels_y'], 1, 3):
                     print(f"Unexpected image shape {rgb_data.shape} for {filename}. Expected (300, 1, 3). Skipping this image.")
                     continue
 
+                # Add the calibrated RGB column to the keogram
                 keogram[:, minute:minute+1, :] = rgb_data
 
             except Exception as e:
                 print(f"Error processing {filename}: {e}")
 
         else:
+            # Fill with zeros if no data is available for the minute, but only for gaps larger than 4 minutes
             if parameters['num_minutes'] - minute > 4:
                 keogram[:, minute:minute+1, :] = np.zeros((parameters['num_pixels_y'], 1, 3), dtype=np.uint8)
 
