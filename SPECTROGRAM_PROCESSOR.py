@@ -37,9 +37,6 @@ def calculate_k_lambda(wavelengths, coeffs):
     return np.polyval(coeffs, wavelengths)
 
 def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
-    """
-    Flips, rotates 90° counterclockwise, subtracts background, and calibrates the image.
-    """
     flipped_image = np.flipud(image_array)
     background = np.median(flipped_image, axis=0)
     background_subtracted_image = np.clip(flipped_image - background[np.newaxis, :], 0, None)
@@ -56,7 +53,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     else:
         raise ValueError("Unknown spectrograph type. Please choose 'MISS1' or 'MISS2'.")
 
-    calibrated_image = rotated_image * k_lambda[np.newaxis, :] / 1000  # Convert to kR/Å
+    # No calibration applied to the main image
     elevation_scale = np.linspace(-90, 90, fov_end - fov_start)
 
     fig = plt.figure(figsize=(12, 8))
@@ -64,8 +61,9 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
 
     gs = plt.GridSpec(3, 2, width_ratios=[5, 1], height_ratios=[1, 4, 1])
 
+    # Main spectrogram plot without calibration
     ax_main = fig.add_subplot(gs[1, 0])
-    ax_main.imshow(calibrated_image, cmap='gray', aspect='auto', extent=[wavelengths.min(), wavelengths.max(), 0, calibrated_image.shape[0]])
+    ax_main.imshow(rotated_image, cmap='gray', aspect='auto', extent=[wavelengths.min(), wavelengths.max(), 0, rotated_image.shape[0]])
     tick_positions = np.linspace(fov_start, fov_end, num=7)
     tick_labels = ["South", "-60", "-30", "Zenith", "30", "60", "North"]
     ax_main.set_yticks(tick_positions)
@@ -74,15 +72,17 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     ax_main.set_ylabel("Elevation [Degrees]", fontsize=12)
     ax_main.grid(False)
 
+    # Spectral analysis subplot with calibration
     ax_spectral = fig.add_subplot(gs[0, 0])
-    spectral_avg = np.mean(calibrated_image[fov_start:fov_end, :], axis=0)
+    spectral_avg = np.mean(rotated_image[fov_start:fov_end, :] * k_lambda[np.newaxis, :], axis=0) / 1000  # Convert to kR/Å
     ax_spectral.plot(wavelengths, spectral_avg)
     ax_spectral.set_ylabel("Spectral Radiance [kR/Å]", fontsize=12)
     ax_spectral.set_title("Spectral Analysis", fontsize=12)
     ax_spectral.grid()
 
+    # Spatial analysis subplot with calibration
     ax_spatial = fig.add_subplot(gs[1, 1])
-    spatial_avg = np.mean(calibrated_image[fov_start:fov_end, :], axis=1)
+    spatial_avg = np.mean(rotated_image[fov_start:fov_end, :] * k_lambda[np.newaxis, :], axis=1) / 1000  # Convert to kR/Å
     ax_spatial.plot(spatial_avg, elevation_scale)
     ax_spatial.set_xlabel("Spatial Radiance [kR/θ]", fontsize=12)
     ax_spatial.set_title("Spatial Analysis", fontsize=12)
@@ -92,6 +92,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
 
     plt.tight_layout()
     plt.show()
+
     
 def check_and_process_latest_image(averaged_PNG_folder, processed_spectrogram_dir):
     last_processed_image = None
