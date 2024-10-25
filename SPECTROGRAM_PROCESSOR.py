@@ -61,7 +61,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
 
     gs = plt.GridSpec(3, 2, width_ratios=[5, 1], height_ratios=[1, 4, 1])
 
-    # Main spectrogram plot without calibration
+    # Main spectrogram plot
     ax_main = fig.add_subplot(gs[1, 0])
     ax_main.imshow(rotated_image, cmap='gray', aspect='auto', extent=[wavelengths.min(), wavelengths.max(), 0, rotated_image.shape[0]])
     tick_positions = np.linspace(fov_start, fov_end, num=7)
