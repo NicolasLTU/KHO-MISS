@@ -1,7 +1,7 @@
 """
-This script processes averaged spectrogram images from the MISS1 and MISS2 spectrographs. It handles image orientation 
-(flipping and rotating), performs background subtraction, and applies wavelength and sensitivity calibration 
-to prepare the data for spectral and spatial analysis.
+This script processes averaged spectrogram images from the MISS1 and MISS2 spectrographs. 
+It handles image orientation (flipping and rotating), performs background subtraction, and 
+applies wavelength and sensitivity calibration to prepare the data for spectral and spatial analysis.
 
 Steps:
 1. Monitors a directory for new images every 60 seconds minus processing time.
@@ -34,9 +34,10 @@ def calculate_wavelength(pixel_columns, coeffs):
     return coeffs[0] + coeffs[1] * pixel_columns + coeffs[2] * (pixel_columns ** 2)
 
 def calculate_k_lambda(wavelengths, coeffs):
+    # Apply polynomial fit directly to wavelength values
     return np.polyval(coeffs, wavelengths)
 
-def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
+def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type, filename):
     flipped_image = np.flipud(image_array)
     background = np.median(flipped_image, axis=0)
     background_subtracted_image = np.clip(flipped_image - background[np.newaxis, :], 0, None)
@@ -45,6 +46,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     if spectrograph_type == "MISS1":
         wavelengths = calculate_wavelength(np.arange(rotated_image.shape[1]), miss1_wavelength_coeffs)
         k_lambda = calculate_k_lambda(wavelengths, coeffs_sensitivity_miss1)
+        
         fov_start, fov_end = 280, 1140
     elif spectrograph_type == "MISS2":
         wavelengths = calculate_wavelength(np.arange(rotated_image.shape[1]), miss2_wavelength_coeffs)
@@ -57,7 +59,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     elevation_scale = np.linspace(-90, 90, fov_end - fov_start)
 
     fig = plt.figure(figsize=(12, 8))
-    fig.suptitle(f"{spectrograph_type}-{datetime.now().strftime('%Y%m%d-%H%M00')}.png", fontsize=18)
+    fig.suptitle(filename, fontsize=18)
 
     gs = plt.GridSpec(3, 2, width_ratios=[5, 1], height_ratios=[1, 4, 1])
 
@@ -91,9 +93,8 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type):
     ax_spatial.grid()
 
     plt.tight_layout()
-    plt.show()
+    return fig  # Return the figure object so it can be saved
 
-    
 def check_and_process_latest_image(averaged_PNG_folder, processed_spectrogram_dir):
     last_processed_image = None
 
@@ -101,26 +102,43 @@ def check_and_process_latest_image(averaged_PNG_folder, processed_spectrogram_di
         start_time = time.time()
         latest_image_file = get_latest_image_path(averaged_PNG_folder)
         if latest_image_file and latest_image_file != last_processed_image:
+            filename = os.path.basename(latest_image_file)
+
+            # Determine spectrograph type
+            if "MISS1" in filename.upper():
+                spectrograph_type = "MISS1"
+            elif "MISS2" in filename.upper():
+                spectrograph_type = "MISS2"
+            else:
+                print("Unknown spectrograph type in filename.")
+                last_processed_image = latest_image_file
+                continue  # Skip processing
+
+            # Extract date and time from the filename
+            filename_no_ext, ext = os.path.splitext(filename)
+            parts = filename_no_ext.split('-')
+
+            if len(parts) == 3:
+                spectrograph_type_in_file = parts[0]
+                date_str = parts[1]
+                time_str = parts[2]
+                processed_image_name = f"{spectrograph_type_in_file}-spectrogram-{date_str}-{time_str}{ext}"
+            else:
+                print("Filename format not recognized.")
+                last_processed_image = latest_image_file
+                continue  # Skip processing
+
             image_array = np.array(Image.open(latest_image_file))
 
-            if "MISS1" in latest_image_file:
-                spectrograph_type = "MISS1"
-                process_and_plot_with_flip_and_rotate(image_array, spectrograph_type)
-            elif "MISS2" in latest_image_file:
-                spectrograph_type = "MISS2"
-                process_and_plot_with_flip_and_rotate(image_array, spectrograph_type)
+            # Process the image and get the figure
+            fig = process_and_plot_with_flip_and_rotate(image_array, spectrograph_type, filename)
 
-            last_processed_image = latest_image_file
-
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M00")
-            processed_image_name = f"{spectrograph_type}-spectrogram-{timestamp}.png"
             processed_image_path = os.path.join(processed_spectrogram_dir, processed_image_name)
-            
-            # Ensure 'fig' refers to the correct figure to save
-            plt.savefig(processed_image_path, format='png', bbox_inches='tight')
-            plt.close()
+            fig.savefig(processed_image_path, format='png', bbox_inches='tight')
+            plt.close(fig)
 
             print(f"Processed and saved spectrogram: {processed_image_path}")
+            last_processed_image = latest_image_file
 
         elapsed_time = time.time() - start_time
         sleep_time = max(60 - elapsed_time, 0)
@@ -141,4 +159,5 @@ def get_latest_image_path(averaged_PNG_folder):
     
     return None
 
+# Start the image checking and processing loop
 check_and_process_latest_image(averaged_PNG_folder, processed_spectrogram_dir)
