@@ -104,17 +104,21 @@ def check_and_process_latest_image(averaged_PNG_folder, processed_spectrogram_di
             image_array = np.array(Image.open(latest_image_file))
 
             if "MISS1" in latest_image_file:
-                process_and_plot_with_flip_and_rotate(image_array, "MISS1")
+                spectrograph_type = "MISS1"
+                process_and_plot_with_flip_and_rotate(image_array, spectrograph_type)
             elif "MISS2" in latest_image_file:
-                process_and_plot_with_flip_and_rotate(image_array, "MISS2")
+                spectrograph_type = "MISS2"
+                process_and_plot_with_flip_and_rotate(image_array, spectrograph_type)
 
             last_processed_image = latest_image_file
 
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M00")
             processed_image_name = f"{spectrograph_type}-spectrogram-{timestamp}.png"
             processed_image_path = os.path.join(processed_spectrogram_dir, processed_image_name)
+            
+            # Ensure 'fig' refers to the correct figure to save
             plt.savefig(processed_image_path, format='png', bbox_inches='tight')
-            plt.close(fig)
+            plt.close()
 
             print(f"Processed and saved spectrogram: {processed_image_path}")
 
