@@ -106,19 +106,16 @@ def process_emission_line(spectro_array, emission_row, binning_factor, pixel_ran
     start_peak = max(emission_row - num_rows_to_average // 2, 0)
     end_peak = min(emission_row + num_rows_to_average // 2, spectro_array.shape[0])
 
-    # Define BASE region (2xFWHM)
-    if end_peak + num_rows_to_average < spectro_array.shape[0]:
-        # Place BASE below the PEAK
-        start_base = end_peak
-        end_base = end_peak + num_rows_to_average
-    elif start_peak - num_rows_to_average >= 0:
-        # Place BASE above the PEAK
-        start_base = start_peak - num_rows_to_average
-        end_base = start_peak
+    buffer_rows = 2 * num_rows_to_average  # Buffer between PEAK and BASE to avoid contamination
+
+    if end_peak + buffer_rows + num_rows_to_average <= spectro_array.shape[0]:
+        # Place BASE below the PEAK with a buffer
+        start_base = end_peak + buffer_rows
+        end_base = start_base + num_rows_to_average
     else:
-        # Fallback: Use whatever rows are available for the BASE
-        start_base = max(0, spectro_array.shape[0] - num_rows_to_average)
-        end_base = spectro_array.shape[0]
+        # Place BASE above the PEAK with a buffer
+        end_base = start_peak - buffer_rows
+        start_base = end_base - num_rows_to_average
 
     # Crop the array to the desired pixel range (columns)
     spectro_array_cropped = spectro_array[:, pixel_range[0]:pixel_range[1]]
