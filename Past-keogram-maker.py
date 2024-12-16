@@ -131,45 +131,74 @@ def scale_channel(channel_data):
 
 # Process and average emission line rows
 def process_emission_line(spectro_array, emission_row, binning_factor, pixel_range):
-    num_rows_to_average = max(1, int(12 / binning_factor))
-    start_row = max(emission_row - num_rows_to_average // 2, 0)
-    end_row = min(emission_row + num_rows_to_average // 2, spectro_array.shape[0])
+    """
+    Extracts rows around the emission line and calculates the intensity by subtracting BASE from PEAK.
+    """
+    num_rows_to_average = max(1, int(12 / binning_factor))  # 2×FWHM rows
 
-    spectro_array_cropped = spectro_array[pixel_range[0]:pixel_range[1], :]
-    extracted_rows = spectro_array_cropped[start_row:end_row, :]
-    averaged_row = np.mean(extracted_rows, axis=0)
-    return averaged_row.flatten()
+    # PEAK region
+    start_peak = max(emission_row - num_rows_to_average // 2, 0)
+    end_peak = min(emission_row + num_rows_to_average // 2, spectro_array.shape[0])
+
+    # BASE region (buffer to avoid contamination)
+    buffer_rows = 2 * num_rows_to_average
+    if end_peak + buffer_rows + num_rows_to_average <= spectro_array.shape[0]:
+        start_base = end_peak + buffer_rows
+        end_base = start_base + num_rows_to_average
+    else:
+        end_base = start_peak - buffer_rows
+        start_base = end_base - num_rows_to_average
+
+    # Crop the spectrogram to pixel range
+    spectro_array_cropped = spectro_array[:, pixel_range[0]:pixel_range[1]]
+
+    # Extract PEAK and BASE rows
+    PEAK_rows = spectro_array_cropped[start_peak:end_peak, :]
+    BASE_rows = spectro_array_cropped[start_base:end_base, :]
+
+    # Calculate intensities
+    PEAK_intensity = np.mean(PEAK_rows, axis=0)
+    BASE_intensity = np.mean(BASE_rows, axis=0)
+
+    # Subtract BASE from PEAK
+    line_intensity = PEAK_intensity - BASE_intensity
+    return line_intensity.flatten()
+
 
 # Create the RGB image from the extracted rows
 def create_rgb_column(spectro_array, wavelengths, coeffs, sensitivity_coeffs, binning_factor, pixel_range):
-    # Calculate the pixel rows for each emission line
-    row_630 = int(wavelength_to_pixel_row(wavelengths['6300'], coeffs))
-    row_558 = int(wavelength_to_pixel_row(wavelengths['5577'], coeffs))
-    row_428 = int(wavelength_to_pixel_row(wavelengths['4278'], coeffs))
+    """
+    Processes the spectrogram to create an RGB column with calibrated intensities.
+    """
+    # Calculate row positions for emission lines
+    row_6300 = int(np.polyval(coeffs[::-1], wavelengths['6300']) / binning_factor)
+    row_5577 = int(np.polyval(coeffs[::-1], wavelengths['5577']) / binning_factor)
+    row_4278 = int(np.polyval(coeffs[::-1], wavelengths['4278']) / binning_factor)
 
-    # Process each emission line and extract the corresponding rows
-    column_RED = process_emission_line(spectro_array, row_630, binning_factor, pixel_range)
-    column_GREEN = process_emission_line(spectro_array, row_558, binning_factor, pixel_range)
-    column_BLUE = process_emission_line(spectro_array, row_428, binning_factor, pixel_range)
+    # Calculate k_lambda values for sensitivity calibration
+    k_lambda_6300 = np.polyval(sensitivity_coeffs, wavelengths['6300'])
+    k_lambda_5577 = np.polyval(sensitivity_coeffs, wavelengths['5577'])
+    k_lambda_4278 = np.polyval(sensitivity_coeffs, wavelengths['4278'])
 
-    # Apply radiance calibration using sensitivity coefficients
-    column_RED_radiance = calculate_radiance(column_RED, sensitivity_coeffs)
-    column_GREEN_radiance = calculate_radiance(column_GREEN, sensitivity_coeffs)
-    column_BLUE_radiance = calculate_radiance(column_BLUE, sensitivity_coeffs)
+    # Extract and process emission line intensities
+    column_RED = process_emission_line(spectro_array, row_6300, binning_factor, pixel_range)
+    column_GREEN = process_emission_line(spectro_array, row_5577, binning_factor, pixel_range)
+    column_BLUE = process_emission_line(spectro_array, row_4278, binning_factor, pixel_range)
 
-    # Apply dynamic scaling to each channel
-    scaled_red_channel = scale_channel(column_RED_radiance)
-    scaled_green_channel = scale_channel(column_GREEN_radiance)
-    scaled_blue_channel = scale_channel(column_BLUE_radiance)
+    # Apply sensitivity scaling and square root scaling
+    red_scaled = np.sqrt(np.clip(column_RED / k_lambda_6300, 0, None))
+    green_scaled = np.sqrt(np.clip(column_GREEN / k_lambda_5577, 0, None))
+    blue_scaled = np.sqrt(np.clip(column_BLUE / k_lambda_4278, 0, None))
 
-    # Stack the columns together to form an RGB image
-    true_rgb_image = np.stack((scaled_red_channel, scaled_green_channel, scaled_blue_channel), axis=-1)
+    # Combine into an RGB column
+    rgb_image = np.stack((red_scaled, green_scaled, blue_scaled), axis=-1)
 
-    # Resize to ensure the output is in (300, 1, 3) format if needed
-    if true_rgb_image.shape[0] != parameters['num_pixels_y']:
-        true_rgb_image = np.resize(true_rgb_image, (parameters['num_pixels_y'], 1, 3))
+    # Normalise to 8-bit range
+    max_val = np.max(rgb_image)
+    if max_val > 0:
+        rgb_image = (rgb_image / max_val) * 255
 
-    return true_rgb_image
+    return rgb_image.astype(np.uint8)
 
 # Create RGB columns for the day
 def create_rgb_columns_for_day(date_str, spectrograph):
@@ -358,19 +387,60 @@ def add_rgb_columns(keogram, base_dir, last_processed_minute, date_str, spectrog
     return keogram
 
 # Main function to prompt for subplot option
+umn creation:
+
+python
+Kopiera kod
 def main():
     date_input = input("Enter the date to process (yyyy/mm/dd): ")
     spectrograph = parameters['device_name']
     add_subplots = input("Do you want to include subplots with calibration data? (yes/no): ").strip().lower() == 'yes'
-    
-    processed_minutes = []
-    average_images(processed_minutes, spectrograph)  # Generate averaged PNGs
-    create_rgb_columns_for_day(date_input, spectrograph)  # Generate RGB columns from the averaged PNGs
-    keogram, last_processed_minute = load_existing_keogram(parameters['keogram_dir'], date_input, spectrograph)
-    keogram = add_rgb_columns(keogram, parameters['RGB_folder'], last_processed_minute, date_input, spectrograph)
-    
-    save_keogram_with_subplots(keogram, parameters['keogram_dir'], date_input, spectrograph, add_subplots)
 
+    processed_minutes = []
+    
+    # Step 1: Average spectrograms
+    average_images(processed_minutes, spectrograph)
+
+    # Step 2: Create RGB columns from averaged images
+    averaged_folder = os.path.join(parameters['averaged_PNG_folder'], date_input)
+    ensure_directory_exists(averaged_folder)
+    matching_files = [f for f in os.listdir(averaged_folder) if f.endswith(".png")]
+
+    for filename in tqdm(matching_files, desc="Creating RGB columns", unit="image"):
+        file_path = os.path.join(averaged_folder, filename)
+        if not verify_image_integrity(file_path):
+            continue
+
+        spectro_data = np.array(Image.open(file_path))
+        pixel_range = parameters['miss2_horizon_limits'] if spectrograph == 'MISS2' else parameters['miss1_horizon_limits']
+
+        # Generate RGB column
+        wavelengths = {'6300': 6300, '5577': 5577, '4278': 4278}
+        RGB_image = create_rgb_column(
+            spectro_data, wavelengths, parameters[f'{spectrograph.lower()}_wavelength_coeffs'],
+            parameters['coeffs_sensitivity'][spectrograph], parameters['binY'], pixel_range
+        )
+
+        # Save the RGB column
+        rgb_output_folder = os.path.join(parameters['RGB_folder'], date_input)
+        ensure_directory_exists(rgb_output_folder)
+        output_filename = f"{os.path.splitext(filename)[0]}_RGB.png"
+        Image.fromarray(RGB_image).save(os.path.join(rgb_output_folder, output_filename))
+
+    # Step 3: Create or load the keogram
+    keogram, last_processed_minute = load_existing_keogram(parameters['keogram_dir'], date_input, spectrograph)
+
+    # Step 4: Add RGB columns to the keogram
+    keogram = add_rgb_columns(keogram, parameters['RGB_folder'], last_processed_minute, date_input, spectrograph)
+
+    # Step 5: Save the final keogram
+    if add_subplots:
+        save_keogram_with_subplots(keogram, parameters['keogram_dir'], date_input, spectrograph)
+    else:
+        save_keogram_with_axes(keogram, parameters['keogram_dir'], spectrograph)
+
+    print(f"Keogram for {date_input} has been created and saved.")
+    
 if __name__ == "__main__":
     main()
 
