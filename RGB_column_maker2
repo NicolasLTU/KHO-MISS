@@ -95,26 +95,43 @@ def extract_binning_from_metadata(metadata):
 # Process and average emission line rows
 def process_emission_line(spectro_array, emission_row, binning_factor, pixel_range):
     """
-    Extracts rows from the spectrogram around a given emission line, averages the rows, and returns the processed data.
+    Extracts rows from the spectrogram around a given emission line, averages the rows, 
+    and returns the processed data. The BASE region is defined near the PEAK region 
+    but excludes it, based on 2xFWHM scaling.
     """
-    num_rows_to_average = max(1, int(12 / binning_factor))
+    # Define 2xFWHM rows based on binning
+    num_rows_to_average = max(1, int(12 / binning_factor))  # Number of rows for PEAK and BASE ie 2 FWHM
+
+    # Define PEAK region (2xFWHM around the emission peak)
     start_peak = max(emission_row - num_rows_to_average // 2, 0)
     end_peak = min(emission_row + num_rows_to_average // 2, spectro_array.shape[0])
 
-    # Define BASE region (2xFWHM) away from the peak
-    start_base = max(emission_row + (5 * num_rows_to_average) - num_rows_to_average // 2, 0)
-    end_base = min(emission_row + (5 * num_rows_to_average) + num_rows_to_average // 2, spectro_array.shape[0])
+    # Define BASE region (2xFWHM)
+    if end_peak + num_rows_to_average < spectro_array.shape[0]:
+        # Place BASE below the PEAK
+        start_base = end_peak
+        end_base = end_peak + num_rows_to_average
+    elif start_peak - num_rows_to_average >= 0:
+        # Place BASE above the PEAK
+        start_base = start_peak - num_rows_to_average
+        end_base = start_peak
+    else:
+        # Fallback: Use whatever rows are available for the BASE
+        start_base = max(0, spectro_array.shape[0] - num_rows_to_average)
+        end_base = spectro_array.shape[0]
 
     # Crop the array to the desired pixel range (columns)
     spectro_array_cropped = spectro_array[:, pixel_range[0]:pixel_range[1]]
 
+    # Extract PEAK and BASE rows
     PEAK_rows = spectro_array_cropped[start_peak:end_peak, :]
     BASE_rows = spectro_array_cropped[start_base:end_base, :]
 
+    # Compute average intensities for PEAK and BASE
     PEAK_intensity = np.mean(PEAK_rows, axis=0)
     BASE_intensity = np.mean(BASE_rows, axis=0)
 
-    # PEAK-BASE subtraction to obtain emission line intensity
+    # Subtract BASE from PEAK to get the emission line intensity
     line_intensity = PEAK_intensity - BASE_intensity
     return line_intensity.flatten()
 
