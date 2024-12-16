@@ -97,7 +97,7 @@ def process_and_plot_with_flip_and_rotate(image_array, spectrograph_type, filena
     # Spatial analysis subplot with calibration
     ax_spatial = fig.add_subplot(gs[1, 1])
     spatial_avg = np.mean(rotated_image[fov_start_binned:fov_end_binned,:] * k_lambda[np.newaxis,:], axis=1) / 1000  # Convert to kR/Å
-    elevation_scale = np.linspace(90, -90, spatial_avg.shape[0])  # This represents the elevation range
+    elevation_scale = np.linspace(90, -90, spatial_avg.shape[0])  # This represents the elevation range - correct orientation
     ax_spatial.plot(spatial_avg, elevation_scale)
     ax_spatial.set_xlabel("Spatial Radiance [kR/θ]", fontsize=12)
     ax_spatial.set_title("Spatial Analysis", fontsize=12)
